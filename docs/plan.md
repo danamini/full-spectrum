@@ -1,7 +1,7 @@
 # Plan: Full Spectrum
 
 Status: phase 1 (skeleton) started 2026-10-20: repo, page shell, `js/physics.js` with its tests, the
-smoke test. Decisions are in section 9; one is still open (which domain).
+smoke test. Decisions are in section 9.
 
 **Daniel (2026-10-20):** "Some kind of interactive electromagnetic spectrum, the real colour
 spectrum, infrared to ultraviolet, etc. A single page app, like a sibling app, Spectrum Aura
@@ -171,8 +171,7 @@ Each phase ends with something usable that can be reviewed before the next one s
 
 ## 8. Hosting
 
-GitHub Pages, from a **private** repo `danamini/full-spectrum`, served on a subdomain of a domain
-Daniel already owns (for example `spectrum.<domain>`):
+GitHub Pages, from a **private** repo `danamini/full-spectrum`, served at `spectrum.moleculeviewer.org`:
 
 - The repo holds a `CNAME` file with the subdomain, as Molecule Viewer does.
 - DNS: one `CNAME` record, `spectrum` → `danamini.github.io`, at the domain's DNS host
@@ -190,13 +189,6 @@ Daniel already owns (for example `spectrum.<domain>`):
 3. **Hosting:** GitHub Pages for now, on a subdomain of an existing domain (section 8).
 4. **Cross-links:** yes, to Molecule Viewer from the start; a sibling app behind a switch (2.8).
 5. **Repo:** private to start with.
-
-Open: **which domain** the subdomain goes on. Daniel owns three (2026-10-20):
-
-| Domain | DNS host | Now serves | Fit |
-| --- | --- | --- | --- |
-| moleculeviewer.org | GoDaddy | Molecule Viewer (GitHub Pages) | the science sibling it links to most; e.g. `spectrum.moleculeviewer.org` |
-| spectrumaura.org | GoDaddy | Spectrum Aura (GitHub Pages) | shares the word; e.g. `full.spectrumaura.org` reads as "full spectrum aura" |
-| example.org | Cloudflare | a sibling app | not a fit while a sibling app is private |
-
-Either GoDaddy domain takes the same single CNAME record (section 8).
+6. **Domain:** `spectrum.moleculeviewer.org` (the `CNAME` file is in the repo). Still to do at release:
+   the GoDaddy record `spectrum` CNAME `danamini.github.io`, verify the domain in GitHub, turn on Pages
+   and *Enforce HTTPS*, and settle the private-repo catch in section 8.
