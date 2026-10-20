@@ -1,0 +1,7 @@
+:root { --bg: #03050b; --ink: #e8ecf4; --dim: #8a93a6; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 16px/1.5 'IBM Plex Sans', system-ui, sans-serif; }
+.landing { display: grid; place-content: center; min-height: 100%; padding: 2rem; text-align: center; }
+h1 { margin: 0 0 1rem; font: 800 clamp(3rem, 12vw, 8rem)/0.9 'Big Shoulders Display', sans-serif; text-transform: uppercase; }
+.landing p { margin: 0.25rem 0; color: var(--dim); }
+.readout { font-variant-numeric: tabular-nums; }
