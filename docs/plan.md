@@ -1,7 +1,7 @@
 # Plan: Full Spectrum
 
-Status: phase 1 (skeleton) started 2026-10-20: repo, page shell, `js/physics.js` with its tests, the
-smoke test. Decisions are in section 9.
+Status: **phases 1–7 built 2026-10-20** (Daniel: "develop it all"). Not yet published: see section 10.
+Decisions are in section 9.
 
 **Daniel (2026-10-20):** "Some kind of interactive electromagnetic spectrum, the real colour
 spectrum, infrared to ultraviolet, etc. A single page app, like a sibling app, Spectrum Aura
@@ -10,7 +10,8 @@ and molecule viewer. Wavelengths and animations, full end to end of the spectrum
 ## 1. The idea
 
 One continuous journey along the electromagnetic spectrum, from radio waves longer than a country
-to gamma rays smaller than a nucleus: about 23 powers of ten in wavelength. It works like Molecule
+to gamma rays smaller than a nucleus: 30 powers of ten in wavelength (3 Hz to about 12 PeV, so the
+most energetic photon yet seen, 1.4 PeV, is on the dial). It works like Molecule
 Viewer's zoom, but the axis is wavelength instead of size. Every position shows the
 wave itself, animated at a scale you can feel. Each position also shows its wavelength, frequency and
 photon energy, what makes and uses that light, and what it does to matter.
@@ -192,3 +193,27 @@ GitHub Pages, from a **private** repo `danamini/full-spectrum`, served at `spect
 6. **Domain:** `spectrum.moleculeviewer.org` (the `CNAME` file is in the repo). Still to do at release:
    the GoDaddy record `spectrum` CNAME `danamini.github.io`, verify the domain in GitHub, turn on Pages
    and *Enforce HTTPS*, and settle the private-repo catch in section 8.
+
+## 10. Next work
+
+Built 2026-10-20: the dial, the wave beside real objects, 3D fields, photons, forty things, visible light
+(prism, lines, sunlight, eyes), hot things, through the air, the sky (Milky Way, Sun, Crab), journey, tour,
+sound, pictures, keyboard, phone layout, addresses. Tests: `tests/physics.mjs`, `tests/smoke.mjs`.
+
+Still to do:
+
+1. **Publish** (section 8): Daniel adds the GoDaddy record `spectrum` CNAME `danamini.github.io`; verify
+   moleculeviewer.org in GitHub; settle the private-repo catch (Pro plan, or go public, or a public
+   site-only repo); turn on Pages and Enforce HTTPS.
+2. **Licence the code** before going public (Molecule Viewer is MIT). `data/cie1931.js` must stay CC BY-SA 4.0
+   whatever the code licence is.
+3. **Sky gaps** (docs/credits-sky.md, "Left out"): the Sun in radio (Nobeyama 17 GHz, terms page
+   unreachable), infrared and gamma; the Milky Way in ultraviolet. Add if a licensable image turns up.
+4. **Atmosphere** is approximate (`schematic: true`): its optical segment is sea level and the rest Maunakea,
+   so there is a small step at 0.9 µm. A single consistent model would remove it.
+5. **Unchecked figures:** the honeybee peaks (344/436/556 nm, Peitsch et al. 1992) were checked against
+   the abstract only; check the full text.
+6. **a sibling app links** are behind `SIBLING_APP.enabled` in `js/links.js` (one link so far, from the
+   Sun in the sky view). Turn on only if a sibling app goes public.
+7. **README GIF**, like Molecule Viewer's, once the site is live.
+

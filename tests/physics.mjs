@@ -21,4 +21,41 @@ const flat = [0.98, 1.02].every(f => p.planck(peak * f, 5772) < p.planck(peak, 5
 if (!flat) failures++;
 console.log(`  ${flat ? 'ok  ' : 'FAIL'}  Planck curve is highest at Wien's peak`);
 
+function check(name, ok) { if (!ok) failures++; console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${name}`); }
+
+// Colour: the CIE observer peaks at 555 nm, spectral colours have the right dominant channel, and the Sun is white.
+const { spectral, blackbody, cmf } = await import('../js/colour.js');
+near('CIE y peaks at 1 at 555 nm', cmf(555)[1], 1, 1e-3);
+const [r650, g650, b650] = spectral(650).rgb, [r530, g530, b530] = spectral(530).rgb, [r450, g450, b450] = spectral(450).rgb;
+check('650 nm is red', r650 > g650 && r650 > b650);
+check('530 nm is green', g530 > r530 && g530 > b530);
+check('450 nm is blue-violet', b450 > r450 && b450 > g450);
+check('the ends of the visible band are dim', Math.max(...spectral(390).rgb) < 60 && Math.max(...spectral(740).rgb) < 60);
+const sun = blackbody(5772).rgb;
+check('a 5772 K blackbody is near white', Math.min(...sun) > 220);
+const lamp = blackbody(2700).rgb;
+check('a 2700 K filament is warm', lamp[0] > lamp[2] + 80);
+
+// The Sun: the measured spectrum above the air agrees with a 5772 K blackbody of the Sun's size and distance.
+const { SOLAR } = await import('../data/solar.js');
+let am0 = 0, bb = 0;
+SOLAR.nm.forEach((n, i) => { const w = (SOLAR.nm[i + 1] ?? n + 10) - n; am0 += SOLAR.am0[i] * w; bb += Math.PI * p.planck(n * 1e-9, 5772) * (6.957e8 / 1.495978707e11) ** 2 * 1e-9 * w; });
+near('ASTM G173 above the air matches a 5772 K Sun (280 nm–4 µm)', am0, bb, 0.05);
+
+// Typing values.
+const fmt = await import('../js/format.js');
+near('"2.45 GHz" reads as 12.24 cm', fmt.parse('2.45 GHz', 'm', p), 0.12236);
+near('"1 MeV" is mega, not milli', fmt.parse('1 MeV', 'm', p), 1.23984e-12);
+near('"1 meV" is milli', fmt.parse('1 meV', 'm', p), 1.23984e-3);
+near('"5 × 10^14 Hz" reads', fmt.parse('5 × 10^14 Hz', 'm', p), 5.99585e-7);
+check('nonsense is refused', fmt.parse('blue', 'm', p) === null);
+
+// Bands: contiguous from end to end, and every thing sits inside the span.
+const { BANDS, SPAN } = await import('../js/bands.js');
+check('bands run without gaps', BANDS.every((b, i) => i === 0 || b.from === BANDS[i - 1].to) && BANDS[0].from === SPAN.long && BANDS.at(-1).to === SPAN.short);
+check('sub-bands tile each band', BANDS.every(b => b.subs[0].from === b.from && b.subs.at(-1).to === b.to && b.subs.every((s, i) => i === 0 || s.from === b.subs[i - 1].to)));
+const { THINGS } = await import('../js/things.js');
+check('every thing is inside the spectrum', THINGS.every(t => t.m <= SPAN.long && t.m >= SPAN.short));
+check('things run longest first', THINGS.every((t, i) => i === 0 || t.m <= THINGS[i - 1].m));
+
 if (failures) { console.log(`${failures} failed`); process.exit(1); }

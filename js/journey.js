@@ -1,0 +1,25 @@
+// The guided journey: from the longest waves to the shortest, one stop at a time. A stop without its own text
+// uses its thing's description.
+export const JOURNEY = [
+  { go: 'radio', text: 'Light comes in every size. We start with radio waves longer than countries; by the end, gamma rays smaller than an atomic nucleus. It is all the same thing: electric and magnetic fields rippling through space at 300,000 km a second.', mode: 'wave', ms: 11000 },
+  { go: 'thing-schumann' },
+  { go: 'thing-longwave' },
+  { go: 'thing-fm' },
+  { go: 'thing-hydrogen-21' },
+  { go: 'thing-microwave-oven' },
+  { go: 'thing-cmb' },
+  { go: 'thing-body' },
+  { go: 'thing-remote' },
+  { go: 'visible', text: 'Everything you have ever seen is in this sliver: 750 to 380 nm, less than one octave of a spectrum thirty powers of ten wide. The colours are computed from how the eye responds, so the ends fade to dark as they really do.', ms: 11000 },
+  { go: 'prism', text: 'A prism sorts light by wavelength because glass slows short waves more than long ones, so they bend more. Newton did this in 1666 and showed white light is all the colours together.', ms: 10000 },
+  { go: 'lines', text: 'Atoms only give out and absorb exact colours. Hydrogen\'s red line, sodium\'s yellow pair, the dark lines in sunlight: this is how we know what the stars are made of.', ms: 11000 },
+  { go: 'thing-black-light' },
+  { go: 'thing-sunburn' },
+  { go: 'thing-ionising' },
+  { go: 'thing-euv-litho' },
+  { go: 'thing-copper-k' },
+  { go: 'thing-medical' },
+  { go: 'thing-pet', mode: 'photons', text: 'Now the photons are what matter. In one metre of a one-milliwatt beam of visible light there are millions; of these 511 keV gamma rays, about forty. Each carries more than 200,000 times the energy of a photon of green light.' },
+  { go: 'thing-fermi', mode: 'photons' },
+  { go: 'thing-lhaaso', mode: 'wave', text: 'The end of the line, for now: a single photon of 1.4 PeV, a wave about two millionths the width of a proton. From the Earth-sized hum of the Schumann resonance to here is nearly thirty powers of ten. Explore any of it: drag the spectrum, or press R for something at random.', ms: 14000 },
+];

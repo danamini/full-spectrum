@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Full Spectrum</title>
-  <meta name="description" content="The whole electromagnetic spectrum, end to end: radio to gamma, with the real colours of light.">
+  <meta name="description" content="The whole electromagnetic spectrum, end to end: radio to gamma, with the real colours of light, waves at a scale you can feel, and what each band does to matter.">
   <meta name="theme-color" content="#03050b">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g'><stop offset='0' stop-color='%23ff3a2a'/><stop offset='.35' stop-color='%23ffd400'/><stop offset='.6' stop-color='%2300e070'/><stop offset='.8' stop-color='%23007cff'/><stop offset='1' stop-color='%237a00ff'/></linearGradient></defs><path d='M4 32 C 12 8, 20 8, 28 32 S 40 56, 46 32 S 54 14, 58 32' fill='none' stroke='url(%23g)' stroke-width='6' stroke-linecap='round'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/app.css">
   <script type="importmap">
     { "imports": {
@@ -17,12 +18,139 @@
     } }
   </script>
 </head>
-<body>
-  <main class="landing">
-    <h1>Full<br>Spectrum</h1>
-    <p>Radio to gamma, end to end. Under construction.</p>
-    <p class="readout" id="readout"></p>
-  </main>
+<body data-view="spectrum" data-mode="wave">
+  <!-- The views: one shows at a time, inside the space the panels leave. -->
+  <div class="views">
+    <canvas id="waveCanvas" class="view-canvas" data-for="spectrum"></canvas>
+    <div id="fieldHost" class="view-host" data-for="field" aria-label="3D view of the electric and magnetic fields. Drag to turn."></div>
+    <div class="field-labels" data-for="field" aria-hidden="true"><span class="lab-e">electric field</span><span class="lab-b">magnetic field</span><span class="lab-go">travel</span></div>
+    <canvas id="visCanvas" class="view-canvas" data-for="visible"></canvas>
+    <canvas id="bbCanvas" class="view-canvas" data-for="blackbody"></canvas>
+    <canvas id="airCanvas" class="view-canvas" data-for="air"></canvas>
+    <div id="skyHost" class="view-host sky" data-for="sky"></div>
+  </div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="top">
+    <a class="mark" href="#" aria-label="Full Spectrum, home">Full<br>Spectrum</a>
+    <nav class="sections" aria-label="Sections">
+      <a href="#visible" data-section="spectrum">Spectrum</a>
+      <a href="#prism" data-section="visible">Visible light</a>
+      <a href="#blackbody" data-section="blackbody">Hot things</a>
+      <a href="#air" data-section="air">Through the air</a>
+      <a href="#sky" data-section="sky">The sky</a>
+    </nav>
+    <div class="actions">
+      <button id="journeyBtn" class="act" type="button" title="A captioned trip from the longest waves to the shortest (J)">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12c2.5-6 4.5-6 7 0s4.5 6 7 0M17 8l4 4-4 4"/></svg><span>Journey</span>
+      </button>
+      <button id="tourBtn" class="act" type="button" aria-pressed="false" title="Tour at random (T)">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Tour</span>
+      </button>
+      <button id="randomBtn" class="act" type="button" title="Jump to something at random (R)">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3.5c4 0 6 10 10 10H21M3 17h3.5c1.6 0 2.8-1.6 3.9-3.6M14 9.6C15 7.9 16 7 17 7h4M18 4l3 3-3 3M18 14l3 3-3 3"/></svg><span>Surprise me</span>
+      </button>
+      <button id="soundBtn" class="act icon-only" type="button" aria-pressed="false" title="Hear it: the frequency shifted down by octaves (S)" aria-label="Sound">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+      </button>
+      <button id="photoBtn" class="act icon-only" type="button" title="Save a picture (P)" aria-label="Save a picture">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      </button>
+      <button id="helpBtn" class="act icon-only" type="button" title="Keyboard and mouse (?)" aria-label="Keyboard and mouse">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- What the cursor is on, and its three numbers (each editable). -->
+  <section class="readout" aria-live="polite">
+    <p class="kicker" id="kicker"></p>
+    <h1 id="name">Visible</h1>
+    <div class="values">
+      <label title="Wavelength. Type a value and press Enter, e.g. 21 cm"><span>wavelength</span><input id="inLength" spellcheck="false" autocomplete="off"></label>
+      <label title="Frequency. Type a value and press Enter, e.g. 2.45 GHz"><span>frequency</span><input id="inFreq" spellcheck="false" autocomplete="off"></label>
+      <label title="Energy of one photon. Type a value and press Enter, e.g. 13.6 eV"><span>photon energy</span><input id="inEnergy" spellcheck="false" autocomplete="off"></label>
+    </div>
+  </section>
+
+  <aside class="details glass" id="details" aria-label="About this part of the spectrum"></aside>
+  <button class="sheet-toggle act" id="sheetToggle" type="button" aria-expanded="false">More</button>
+
+  <!-- The view's own controls, above the ribbon. -->
+  <div class="controls" id="controls">
+    <div class="seg" data-for="spectrum" role="group" aria-label="Show it as">
+      <button type="button" data-mode="wave" aria-pressed="true">Wave</button>
+      <button type="button" data-mode="field" aria-pressed="false">Fields in 3D</button>
+      <button type="button" data-mode="photons" aria-pressed="false">Photons</button>
+    </div>
+    <div class="seg" data-for="field" role="group" aria-label="Polarisation">
+      <button type="button" data-polar="linear" aria-pressed="true">Linear</button>
+      <button type="button" data-polar="circular" aria-pressed="false">Circular</button>
+    </div>
+    <div class="seg" data-for="visible" role="group" aria-label="Visible light">
+      <button type="button" data-vis="prism">Prism</button>
+      <button type="button" data-vis="lines">Atoms' lines</button>
+      <button type="button" data-vis="sunlight">Sunlight</button>
+      <button type="button" data-vis="eyes">Who sees what</button>
+    </div>
+    <div class="bb" data-for="blackbody">
+      <label class="slider"><span>Temperature</span><input id="tempSlider" type="range" min="0" max="1000" step="1" aria-label="Temperature"></label>
+      <select id="tempPreset" aria-label="Examples"></select>
+    </div>
+    <div class="seg" data-for="sky" role="group" aria-label="Object" id="skyTabs"></div>
+    <span class="hint" id="hint">Drag the spectrum or scroll to tune · scroll with ctrl or pinch to zoom</span>
+  </div>
+
+  <footer class="dial">
+    <canvas id="ribbon" aria-label="The electromagnetic spectrum from radio to gamma rays. Drag to tune; scroll to zoom; arrow keys move, plus and minus zoom."></canvas>
+  </footer>
+
+  <!-- The landing page. -->
+  <section class="landing" id="landing">
+    <div class="landing-inner">
+      <h2 class="title">Full<br>Spectrum</h2>
+      <p class="lede">All light is the same thing at different sizes. Radio waves longer than the Earth, the colours you see, gamma rays smaller than a nucleus: thirty powers of ten of one spectrum, end to end.</p>
+      <div class="cta">
+        <button class="primary" type="button" id="startJourney">Start the journey</button>
+        <button class="secondary" type="button" id="explore">Explore</button>
+      </div>
+      <ol class="chapters" id="chapters"></ol>
+      <div class="more" id="moreLinks">
+        <a href="#prism"><b>Prism</b><small>White light, split</small></a>
+        <a href="#lines"><b>Atoms' lines</b><small>Every element's barcode</small></a>
+        <a href="#blackbody-5772"><b>Hot things</b><small>Why hot things glow</small></a>
+        <a href="#air"><b>Through the air</b><small>What reaches the ground</small></a>
+        <a href="#sky"><b>The sky</b><small>One sky, every light</small></a>
+      </div>
+      <p class="fine">Data from the CIE, NIST, ASTM, NASA and others: see <a href="https://github.com/danamini/full-spectrum#data">sources</a>. Sister site: <a href="https://moleculeviewer.org">Molecule Viewer</a>.</p>
+    </div>
+  </section>
+
+  <div class="caption glass" id="caption" hidden>
+    <p id="captionText"></p>
+    <div class="caption-bar"><span id="captionStep"></span><button type="button" id="captionPrev" aria-label="Back">‹</button><button type="button" id="captionNext" aria-label="Next">›</button><button type="button" id="captionStop">End</button></div>
+  </div>
+
+  <div class="tip" id="tip" hidden></div>
+  <div class="toast" id="toast" hidden></div>
+
+  <dialog class="help" id="help">
+    <h2>Getting around</h2>
+    <dl>
+      <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Tune to longer or shorter waves (hold shift to go faster)</dd>
+      <dt><kbd>+</kbd> <kbd>−</kbd></dt><dd>Zoom the spectrum in and out</dd>
+      <dt><kbd>0</kbd></dt><dd>See the whole spectrum</dd>
+      <dt><kbd>1</kbd>–<kbd>7</kbd></dt><dd>Radio, microwave, infrared, visible, ultraviolet, X-ray, gamma</dd>
+      <dt><kbd>W</kbd></dt><dd>Wave, fields in 3D, photons</dd>
+      <dt><kbd>V</kbd> <kbd>B</kbd> <kbd>A</kbd> <kbd>K</kbd></dt><dd>Visible light, hot things, through the air, the sky</dd>
+      <dt><kbd>J</kbd> <kbd>T</kbd> <kbd>R</kbd></dt><dd>Journey, tour, surprise me</dd>
+      <dt><kbd>S</kbd> <kbd>P</kbd></dt><dd>Sound on or off, save a picture</dd>
+      <dt><kbd>Esc</kbd></dt><dd>Stop, or back to the start</dd>
+    </dl>
+    <p>Type into the wavelength, frequency or energy to jump there (e.g. <i>21 cm</i>, <i>2.45 GHz</i>, <i>511 keV</i>). Every place has its own address to share.</p>
+    <form method="dialog"><button class="primary">Close</button></form>
+  </dialog>
+
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -20,3 +20,12 @@ export function planck(metres, kelvin) {
   const x = (H * C) / (metres * K_B * kelvin);
   return (2 * H * C * C) / metres ** 5 / Math.expm1(x);
 }
+
+// Photons in a beam of a given power: how many leave each second, and how many are in each metre of it.
+export function photons(metres, watts = 1e-3) {
+  const perSecond = watts / ((H * C) / metres);
+  return { perSecond, perMetre: perSecond / C };
+}
+
+// The thermal energy of a molecule at room temperature (kT at 293 K), in eV: about 0.025.
+export const ROOM_KT_EV = (K_B * 293) / EV;
