@@ -12,12 +12,12 @@ Start with `docs/plan.md`: section 10 (next work) and 9 (decisions). The README 
   say so rather than drawing hard edges.
 - **Real colour vs false colour:** only the visible band is drawn in real (CIE-derived) colour;
   everything else is false colour, and must look it.
-- **a sibling app is private.** Links to it stay behind the switch in `js/links.js`, off by default;
-  never put its unpublished content or addresses in this repo.
+- **This repo is public.** Never name, link or describe Daniel's unpublished projects here (code, docs or
+  commit messages); link only to public sibling apps (`js/links.js`).
 - **Checks:** `node tests/physics.mjs` (seconds) as you go; `npm test` (about five minutes, a headless browser)
   before committing. A fixed bug gets a test. `node tools/shot.mjs <url> <dir> <hash>...` for screenshots;
   look at them before calling a visual change done.
-- **Port 8123 is Daniel's.** `npm run serve` serves on 8123 (a sibling app has 8000). Never stop a server by
+- **Port 8123 is Daniel's.** `npm run serve` serves on 8123 (another local app has 8000). Never stop a server by
   pattern (`pkill -f http.server`): it kills theirs too. Stop only the PID you started. The tests pick their own port.
 - **Licences:** `data/cie1931.js` is CC BY-SA 4.0 (share-alike); NIST lines are © NIST with the citation they
   ask for. A new image or dataset goes in `docs/credits-*.md` with its licence before it ships.

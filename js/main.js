@@ -4,7 +4,7 @@ import * as P from './physics.js';
 import { BANDS, SPAN, bandAt, subAt, byKey, effectAt } from './bands.js';
 import { THINGS, thingByKey } from './things.js';
 import { spectral, css, VISIBLE, blackbody as glowColour } from './colour.js';
-import { moleculeViewer, siblingApp } from './links.js';
+import { moleculeViewer } from './links.js';
 import { Ribbon } from './ribbon.js';
 import { WaveView, waveColour } from './wave.js';
 import { VisibleView, VIEWS as VIS_VIEWS } from './visible.js';
@@ -191,8 +191,6 @@ function details() {
     }
     html += `<h3>Every picture</h3><ul class="things pictures">${o.images.map((im, i) => `<li><button type="button" data-picture="${i}"${im === cur ? ' aria-current="true"' : ''}><span>${esc(bandAt(im.metres).name)}<small>${fmt.length(im.metres)}</small></span><span class="short">${esc(im.short)}</span></button></li>`).join('')}</ul>`;
     html += `<p class="note">Each picture shows the same object in a different light: different matter, at different temperatures, shines in each. Tune the spectrum below, or pick a picture. Pictures in light we cannot see are given false colours.</p>`;
-    const st = state.sky.key === 'sun' && siblingApp('#sun');
-    if (st) html += `<ul class="links"><li><a href="${st}" target="_blank" rel="noopener">The Sun in a sibling app</a></li></ul>`;
   } else {
     const t = state.thing;
     if (t) html += `<div class="thing"><p class="known">${esc(t.known)}</p><p>${esc(t.why)}</p></div>`;

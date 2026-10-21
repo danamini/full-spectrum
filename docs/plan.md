@@ -4,7 +4,7 @@ Status: **phases 1–7 built 2026-10-20** (Daniel: "develop it all"). Not yet pu
 Decisions are in section 9.
 
 **Daniel (2026-10-20):** "Some kind of interactive electromagnetic spectrum, the real colour
-spectrum, infrared to ultraviolet, etc. A single page app, like a sibling app, Spectrum Aura
+spectrum, infrared to ultraviolet, etc. A single page app, like Spectrum Aura
 and molecule viewer. Wavelengths and animations, full end to end of the spectrum. Plan for now."
 
 ## 1. The idea
@@ -88,7 +88,7 @@ Viewer (molecule, atom, nucleus).
 - The atmosphere's transmission across the whole spectrum shows the radio and optical windows,
   which is why some telescopes are on the ground and the rest are in space.
 - The same object (the Sun, the Crab Nebula, the Milky Way) in radio, infrared, visible, X-ray and
-  gamma, using real survey images with credits. Linked from a sibling app's Sun if it fits there.
+  gamma, using real survey images with credits.
 
 ### 2.8 Around it, as in the other apps
 - A landing page with chapters (radio, microwave, infrared, visible, ultraviolet, X-ray, gamma).
@@ -99,8 +99,6 @@ Viewer (molecule, atom, nucleus).
 - Optional sound: each frequency shifted down by whole octaves into hearing, so the ribbon plays a
   pitch.
 - Links out to Molecule Viewer (elements, atom, nucleus) from the first phase that has them.
-  Links to a sibling app sit behind one switch in `js/links.js`, off until a sibling app is
-  public (Daniel, 2026-10-20: it may never be open source); while off, those places show no link.
 
 ## 3. Accuracy and sources
 
@@ -188,8 +186,8 @@ GitHub Pages, from a **private** repo `danamini/full-spectrum`, served at `spect
 1. **Name:** Full Spectrum.
 2. **Stack:** as Molecule Viewer: static, no build, three.js by import map.
 3. **Hosting:** GitHub Pages for now, on a subdomain of an existing domain (section 8).
-4. **Cross-links:** yes, to Molecule Viewer from the start; a sibling app behind a switch (2.8).
-5. **Repo:** private to start with.
+4. **Cross-links:** yes, to Molecule Viewer from the start.
+5. **Repo:** private to start with; public from 2026-10-21 (v0.0.1), so GitHub Pages can serve it.
 6. **Domain:** `spectrum.moleculeviewer.org` (the `CNAME` file is in the repo). Still to do at release:
    the GoDaddy record `spectrum` CNAME `danamini.github.io`, verify the domain in GitHub, turn on Pages
    and *Enforce HTTPS*, and settle the private-repo catch in section 8.
@@ -213,7 +211,5 @@ Still to do:
    so there is a small step at 0.9 µm. A single consistent model would remove it.
 5. **Unchecked figures:** the honeybee peaks (344/436/556 nm, Peitsch et al. 1992) were checked against
    the abstract only; check the full text.
-6. **a sibling app links** are behind `SIBLING_APP.enabled` in `js/links.js` (one link so far, from the
-   Sun in the sky view). Turn on only if a sibling app goes public.
-7. **README GIF**, like Molecule Viewer's, once the site is live.
+6. **README GIF**, like Molecule Viewer's, once the site is live.
 

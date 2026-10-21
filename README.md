@@ -124,3 +124,9 @@ Every dataset and image, with its exact source, citation and licence, is in
 Like [Molecule Viewer](https://github.com/danamini/molecule-viewer), this is an experiment in building with AI:
 the code was written in conversation with Anthropic's Claude. The facts are sourced above so anyone can check
 them, and corrections are welcome.
+
+## Licence
+
+The code is [MIT](LICENSE). The data, images and 3D models are not ours to license: each keeps its owner's
+terms, listed in the credits files above. In particular `data/cie1931.js` is CC BY-SA 4.0, and the models in
+`assets/models/` are CC BY 3.0 or CC0.
