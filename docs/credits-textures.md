@@ -5,6 +5,7 @@ Fetched by `tools/fetch_textures.mjs` into `assets/textures/`. The planet maps a
 made from NASA elevation and imagery data. Everest's heights are the Terrain Tiles on AWS Open Data; the
 colouring of snow, ice and rock on them is ours, from height and steepness.
 
+- **britain**: Admin 0 countries, 1:50m, by Natural Earth. Source: https://www.naturalearthdata.com/. Licence: public domain. Changes: the coastlines of the United Kingdom and Ireland, in km on a flat map centred at 54° N, 2° W. Fetched 2026-10-21.
 - **earth-clouds**: 2k_earth_clouds.jpg, by Solar System Scope (INOVE), based on NASA elevation and imagery data. Source: https://www.solarsystemscope.com/textures/. Licence: CC BY 4.0. Changes: resized to 2048 px wide, made grey, saved as WebP. Fetched 2026-10-21.
 - **earth-day**: 2k_earth_daymap.jpg, by Solar System Scope (INOVE), based on NASA elevation and imagery data. Source: https://www.solarsystemscope.com/textures/. Licence: CC BY 4.0. Changes: resized to 2048 px wide, saved as WebP. Fetched 2026-10-21.
 - **earth-night**: 2k_earth_nightmap.jpg, by Solar System Scope (INOVE), based on NASA elevation and imagery data. Source: https://www.solarsystemscope.com/textures/. Licence: CC BY 4.0. Changes: resized to 2048 px wide, saved as WebP. Fetched 2026-10-21.

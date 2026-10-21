@@ -14,6 +14,7 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { build } from './models3d.js';
+import { DRESS } from './midsize.js';
 import { VIEWPORT } from './beads.js';
 import { MODELS } from '../data/models.js';
 import { OBJECTS } from './scale.js';
@@ -27,7 +28,7 @@ function readyMade(key) {
   const info = MODELS[key], tall = OBJECTS.find(o => o.key === key)?.tall;
   const holder = new THREE.Group(), turn = new THREE.Group();
   holder.rotation.x = 0.12; holder.add(turn);
-  let mixer = null, last = 0;
+  let mixer = null, last = 0, dress = null;
   loader.load(info.file, gltf => {
     const scene = gltf.scene, box = new THREE.Box3();
     // Pose an animated model first, so it is measured as it will be drawn.
@@ -39,8 +40,9 @@ function readyMade(key) {
     scene.scale.multiplyScalar(1 / (tall ? size.y : size.x));
     scene.position.sub(measure().getCenter(new THREE.Vector3()));
     turn.add(scene);
+    dress = DRESS[key]?.(scene, turn) ?? null;
   }, undefined, err => console.warn(`model ${key}:`, err));
-  return { obj: holder, update: t => { mixer?.update(Math.min(0.1, t - last)); last = t; turn.rotation.y = Math.sin(t * 0.3) * 0.6; } };
+  return { obj: holder, update: t => { mixer?.update(Math.min(0.1, t - last)); last = t; dress?.(t); turn.rotation.y = Math.sin(t * 0.3) * 0.6; } };
 }
 
 const FOV = 24;
@@ -120,8 +122,7 @@ export class WaveStage {
     if (!m) {
       const b = MODELS[key] ? readyMade(key) : build(key);
       if (!b) return;
-      m = { key, ...b, sparks: [] };
-      m.obj.traverse(o => { if (o.isPoints && o.userData.base) m.sparks.push(o); });
+      m = { key, ...b };
       this.scene.add(m.obj);
       this.models.set(key, m);
     }
@@ -178,7 +179,7 @@ export class WaveStage {
       m.update(t, m.px, m.px * this.renderer.getPixelRatio() * this.camera.position.z);
       // Glowing points are sized in the model's units; turn that into the size three wants at this scale.
       const k = m.px / Math.tan((FOV / 2) * Math.PI / 180);
-      for (const s of m.sparks) s.material.size = s.userData.base * k;
+      m.obj.traverse(o => { if (o.isPoints && o.userData.base) o.material.size = o.userData.base * k; }); // including any added once data loaded
     }
     this.composer.render();
   }

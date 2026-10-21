@@ -5,108 +5,13 @@
 // Textures are drawn in code, so nothing is downloaded.
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import * as micro from './micro.js';
 import { TEXTURES } from '../data/textures.js';
 import { proton as protonCloud, PROJ, RADIUS as PROTON_RADIUS, nucleus, cloudMaterial, pointsFrom, buffer, push, randomDir, tick } from './nucleon.js';
 import { Beads } from './beads.js';
 
-const TAU = Math.PI * 2;
-const V = (x, y, z) => new THREE.Vector3(x, y, z);
-
-// ---------------------------------------------------------------- noise
-// Value noise in 3D, summed over octaves. Deterministic, so every model looks the same each visit.
-function hash(x, y, z) {
-  let h = (x * 374761393 + y * 668265263 + z * 2147483647) | 0;
-  h = Math.imul(h ^ (h >>> 13), 1274126177);
-  return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
-}
-function noise(x, y, z) {
-  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
-  const xf = x - xi, yf = y - yi, zf = z - zi;
-  const s = t => t * t * (3 - 2 * t), u = s(xf), v = s(yf), w = s(zf);
-  const l = (a, b, t) => a + (b - a) * t;
-  const c = (i, j, k) => hash(xi + i, yi + j, zi + k);
-  return l(l(l(c(0, 0, 0), c(1, 0, 0), u), l(c(0, 1, 0), c(1, 1, 0), u), v), l(l(c(0, 0, 1), c(1, 0, 1), u), l(c(0, 1, 1), c(1, 1, 1), u), v), w);
-}
-function fbm(x, y, z, octaves = 5) {
-  let sum = 0, amp = 0.5, f = 1;
-  for (let i = 0; i < octaves; i++) { sum += amp * noise(x * f, y * f, z * f); f *= 2.03; amp *= 0.5; }
-  return sum / (1 - 0.5 ** octaves);
-}
-// A seeded random sequence for placing things.
-function rng(seed) { let s = seed >>> 0; return () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) + 0x9e3779b9 >>> 0) / 4294967296); }
-
-// ---------------------------------------------------------------- textures
-function canvasTexture(w, h, paint, colour = true) {
-  const c = document.createElement('canvas'); c.width = w; c.height = h;
-  const ctx = c.getContext('2d');
-  paint(ctx, w, h);
-  const t = new THREE.CanvasTexture(c);
-  if (colour) t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 4;
-  return t;
-}
-// Vertex colours are linear light; these helpers take the usual display (sRGB) values.
-const lin = c => c.map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
-const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * Math.min(1, Math.max(0, t)));
-const smooth = (e0, e1, x) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
-
-// A soft round dot, for glows and particles.
-let dotTexture;
-function dot() {
-  return dotTexture ??= canvasTexture(64, 64, (ctx) => {
-    const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,255,255,0.6)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, 64, 64);
-  });
-}
-
-// ---------------------------------------------------------------- shared pieces
-// A rim of light that brightens towards the edge, like an atmosphere or a membrane seen side-on.
-export function glowShell(geometry, colour, { power = 3, strength = 1.2 } = {}) {
-  const mat = new THREE.ShaderMaterial({
-    uniforms: { colour: { value: new THREE.Color(colour) }, power: { value: power }, strength: { value: strength } },
-    vertexShader: 'varying vec3 vN; varying vec3 vV; void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }',
-    fragmentShader: 'uniform vec3 colour; uniform float power; uniform float strength; varying vec3 vN; varying vec3 vV; void main() { float f = pow(1.0 - abs(dot(vN, vV)), power) * strength; gl_FragColor = vec4(colour * f, f); }',
-    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
-  });
-  return new THREE.Mesh(geometry, mat);
-}
-// Points drawn as soft glowing dots that add up where they overlap.
-function sparks(positions, colour, size, { colours = null, opacity = 1 } = {}) {
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  if (colours) g.setAttribute('color', new THREE.Float32BufferAttribute(colours, 3));
-  const m = new THREE.PointsMaterial({ color: new THREE.Color(colour).multiplyScalar(2), size, map: dot(), transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending, vertexColors: !!colours, sizeAttenuation: true });
-  const p = new THREE.Points(g, m);
-  p.userData.base = size; // in model units; the stage scales it to the screen
-  return p;
-}
-// A sphere pushed in and out by noise, for blobby proteins and grains.
-function lumpy(radius, amount, freq, seed = 0, detail = 4) {
-  const ico = new THREE.IcosahedronGeometry(radius, detail);
-  ico.deleteAttribute('normal'); ico.deleteAttribute('uv');
-  const g = mergeVertices(ico), p = g.attributes.position, v = new THREE.Vector3(); // shared corners, so it shades smoothly
-  for (let i = 0; i < p.count; i++) {
-    v.fromBufferAttribute(p, i);
-    const n = v.clone().normalize().multiplyScalar(freq);
-    v.multiplyScalar(1 + amount * (fbm(n.x + seed, n.y, n.z, 4) - 0.5) * 2);
-    p.setXYZ(i, v.x, v.y, v.z);
-  }
-  g.computeVertexNormals();
-  return g;
-}
-const std = (colour, o = {}) => new THREE.MeshStandardMaterial({ color: colour, roughness: 0.55, metalness: 0, ...o });
-const phys = (colour, o = {}) => new THREE.MeshPhysicalMaterial({ color: colour, roughness: 0.4, metalness: 0, ...o });
-function tube(points, radius, mat, segs = 64, radial = 8, closed = false) {
-  return new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, closed), segs, radius, radial, closed), mat);
-}
-// Turn about the vertical, at `speed` radians a second, with a fixed tilt towards the viewer.
-function turntable(obj, speed = 0.35, tilt = 0.25) {
-  const holder = new THREE.Group(); holder.rotation.x = tilt; holder.add(obj);
-  return { obj: holder, update: t => { obj.rotation.y = t * speed; } };
-}
+import { TAU, V, hash, noise, fbm, rng, canvasTexture, lin, mix, smooth, dot, glowShell, sparks, lumpy, std, phys, tube, turntable } from './model-kit.js';
+import * as mid from './midsize.js';
 
 // ---------------------------------------------------------------- planets and moons
 // Real maps (assets/textures/, tools/fetch_textures.mjs: Solar System Scope, CC BY 4.0, from NASA data).
@@ -146,6 +51,8 @@ function planet(colourMap, { roughness = 0.9, roughnessMap = null, normalMap = n
 }
 
 const MODELS = {
+  // The middle-sized things: js/midsize.js.
+  whale: mid.whale, pitch: mid.pitch, bus: mid.bus, ant: mid.ant, phone: mid.phone, coin: mid.coin, sand: mid.sand, hair: mid.hair, londonEdinburgh: mid.londonEdinburgh,
   // Bead models of real structures and whole microbes: js/micro.js.
   haemoglobin: micro.haemoglobin, dna: micro.dna, ribosome: micro.ribosome, flu: micro.flu, mimivirus: micro.mimivirus, bacterium: micro.bacterium,
 
@@ -163,7 +70,6 @@ const MODELS = {
     g.add(e.obj, m.obj, line);
     return { obj: g, update: (t, px) => { e.update(t); m.update(t); e.obj.scale.setScalar(26 / px); m.obj.scale.setScalar(9 / px); line.material.dashSize = line.material.gapSize = 5 / px; } };
   },
-  londonEdinburgh: () => route([V(-0.5, -0.02, 0), V(-0.25, 0.05, 0.03), V(0, 0.02, -0.02), V(0.25, 0.06, 0.02), V(0.5, 0, 0)], '#f2b45a'),
   marathon: () => route([V(-0.5, 0, 0), V(-0.35, 0.08, 0.05), V(-0.15, -0.05, -0.06), V(0.05, 0.07, 0.02), V(0.22, -0.06, 0.05), V(0.38, 0.05, -0.03), V(0.5, 0, 0)], '#8ef0b0'),
 
   // Everest from real heights (assets/textures/everest.bin: a 16 km square round the summit), as a block of
@@ -271,133 +177,6 @@ const MODELS = {
     g.position.y = -0.5;
     const holder = new THREE.Group(); holder.rotation.x = 0.1; holder.add(g);
     return { obj: holder, update: t => { g.rotation.y = t * 0.15; beacon.material.opacity = (t % 1.5) < 0.18 ? 1 : 0.08; } };
-  },
-
-  pitch() {
-    const L = 1, W = 0.65;
-    const tex = canvasTexture(1050, 680, (ctx, w, h) => {
-      for (let i = 0; i < 14; i++) { ctx.fillStyle = i % 2 ? '#2e6e36' : '#357d3e'; ctx.fillRect((i * w) / 14, 0, w / 14 + 1, h); }
-      const k = w / 105; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 0.14 * k * 1.2;
-      const m = 0;
-      ctx.strokeRect(m + 1, m + 1, w - 2, h - 2);
-      ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.stroke();
-      ctx.beginPath(); ctx.arc(w / 2, h / 2, 9.15 * k, 0, TAU); ctx.stroke();
-      for (const s of [0, 1]) {
-        const x = s ? w : 0, d = s ? -1 : 1;
-        ctx.strokeRect(s ? w - 16.5 * k : 0, h / 2 - 20.16 * k, 16.5 * k, 40.32 * k);
-        ctx.strokeRect(s ? w - 5.5 * k : 0, h / 2 - 9.16 * k, 5.5 * k, 18.32 * k);
-        ctx.beginPath(); ctx.arc(x + d * 11 * k, h / 2, 9.15 * k, s ? Math.PI - 0.93 : -0.93, s ? Math.PI + 0.93 : 0.93); ctx.stroke();
-        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + d * 11 * k, h / 2, 0.3 * k, 0, TAU); ctx.fill();
-      }
-      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(w / 2, h / 2, 0.3 * k, 0, TAU); ctx.fill();
-    });
-    const g = new THREE.Group();
-    const grass = new THREE.Mesh(new THREE.PlaneGeometry(L, W), std(0xffffff, { map: tex, roughness: 0.9 }));
-    grass.rotation.x = -Math.PI / 2; g.add(grass);
-    const surround = new THREE.Mesh(new THREE.PlaneGeometry(L * 1.12, W * 1.18), std(0x1f4a27, { roughness: 1 }));
-    surround.rotation.x = -Math.PI / 2; surround.position.y = -0.001; g.add(surround);
-    const white = std(0xffffff, { roughness: 0.3, emissive: 0x333333 });
-    for (const s of [-1, 1]) {
-      const gw = 7.32 / 105, gh = 2.44 / 105, x = s * L / 2;
-      g.add(tube([V(x, 0, -gw / 2), V(x, gh, -gw / 2), V(x, gh, gw / 2), V(x, 0, gw / 2)], 0.0012, white, 12, 4));
-    }
-    // Floodlights at the corners, with their glow.
-    for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-      const mx = x * L * 0.55, mz = z * W * 0.58;
-      const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.002, 0.003, 0.22, 6), std(0x8b96aa));
-      mast.position.set(mx, 0.11, mz); g.add(mast);
-      const lamp = sparks([mx, 0.225, mz], 0xfff6dd, 0.08); g.add(lamp);
-    }
-    // A ball, rolling up and down.
-    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.006, 16, 12), white);
-    g.add(ball);
-    const holder = new THREE.Group(); holder.rotation.x = 0.7; holder.add(g);
-    return { obj: holder, update: t => { g.rotation.y = Math.sin(t * 0.2) * 0.35; ball.position.set(Math.sin(t * 0.7) * 0.4, 0.006, Math.sin(t * 1.1) * 0.2); } };
-  },
-
-  phone() {
-    const g = new THREE.Group();
-    const frame = new THREE.Mesh(new RoundedBoxGeometry(0.48, 1, 0.055, 6, 0.07), phys(0x2a3140, { metalness: 0.9, roughness: 0.3 }));
-    g.add(frame);
-    const screenTex = canvasTexture(240, 500, (ctx, w, h) => {
-      const gr = ctx.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#2b1a6b'); gr.addColorStop(0.5, '#1d5fa8'); gr.addColorStop(1, '#f2b45a');
-      ctx.fillStyle = gr; ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.font = '600 44px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('09:41', w / 2, 90);
-      const cols = ['#ff6b6b', '#ffd166', '#06d6a0', '#4cc9f0', '#b388ff', '#f78c6b', '#90be6d', '#f9c74f'];
-      for (let i = 0; i < 16; i++) { ctx.fillStyle = cols[i % cols.length]; ctx.beginPath(); ctx.roundRect(22 + (i % 4) * 52, 170 + Math.floor(i / 4) * 64, 40, 40, 10); ctx.fill(); }
-      ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.roundRect(16, h - 80, w - 32, 60, 20); ctx.fill();
-    });
-    const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.43, 0.94), std(0x000000, { emissive: 0xffffff, emissiveMap: screenTex, emissiveIntensity: 1.1, roughness: 0.05, metalness: 0.3 }));
-    screen.position.z = 0.03; g.add(screen); // clear of the frame's face, so the two never fight for depth
-    const bump = new THREE.Mesh(new RoundedBoxGeometry(0.2, 0.2, 0.02, 3, 0.04), phys(0x3a4254, { metalness: 0.6, roughness: 0.2 }));
-    bump.position.set(-0.11, 0.36, -0.03); g.add(bump);
-    for (const [x, y] of [[-0.155, 0.41], [-0.07, 0.41], [-0.155, 0.32]]) {
-      const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.012, 24), phys(0x05070c, { roughness: 0.02, metalness: 0.5, clearcoat: 1 }));
-      lens.rotation.x = Math.PI / 2; lens.position.set(x, y, -0.042); g.add(lens);
-    }
-    const holder = new THREE.Group(); holder.add(g);
-    return { obj: holder, update: t => { g.rotation.y = Math.sin(t * 0.35) * 1.4; g.rotation.x = 0.12 + Math.sin(t * 0.5) * 0.06; } };
-  },
-
-  coin() {
-    // The 12-sided bimetallic £1 coin: a gold-coloured ring round a silver-coloured centre.
-    const R = 0.5, T = 2.8 / 23.43;
-    const outer = new THREE.Shape(), hole = new THREE.Path(), inner = new THREE.Shape();
-    for (let i = 0; i <= 12; i++) { const a = (i / 12) * TAU + Math.PI / 12; i ? outer.lineTo(Math.cos(a) * R, Math.sin(a) * R) : outer.moveTo(Math.cos(a) * R, Math.sin(a) * R); }
-    for (let i = 0; i <= 64; i++) { const a = (i / 64) * TAU; const p = [Math.cos(a) * R * 0.66, Math.sin(a) * R * 0.66]; i ? hole.lineTo(...p) : hole.moveTo(...p); i ? inner.lineTo(...p) : inner.moveTo(...p); }
-    outer.holes.push(hole);
-    const relief = canvasTexture(256, 256, (ctx) => {
-      ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, 256, 256);
-      ctx.strokeStyle = '#c0c0c0'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(128, 128, 118, 0, TAU); ctx.stroke();
-      ctx.font = '700 22px serif'; ctx.fillStyle = '#d0d0d0'; ctx.textAlign = 'center';
-      for (const [i, ch] of [...'ELIZABETH II · D · G · REG · F · D · 2017 · '].entries()) { ctx.save(); ctx.translate(128, 128); ctx.rotate((i / 44) * TAU); ctx.fillText(ch, 0, -100); ctx.restore(); }
-      ctx.font = '700 64px serif'; ctx.fillText('£1', 128, 150);
-    }, false);
-    const bevel = { depth: T * 0.7, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.02, bevelSegments: 3, curveSegments: 24 };
-    const gold = phys(0xe5c46a, { metalness: 1, roughness: 0.22, bumpMap: relief, bumpScale: 3, clearcoat: 0.4 });
-    const silver = phys(0xd8dde4, { metalness: 1, roughness: 0.2, bumpMap: relief, bumpScale: 3 });
-    const ringGeo = new THREE.ExtrudeGeometry(outer, bevel), coreGeo = new THREE.ExtrudeGeometry(inner, bevel);
-    for (const geo of [ringGeo, coreGeo]) {
-      geo.translate(0, 0, -T * 0.35);
-      const p = geo.attributes.position, uv = geo.attributes.uv;
-      for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) + 0.5, p.getY(i) + 0.5);
-    }
-    const g = new THREE.Group(); g.add(new THREE.Mesh(ringGeo, gold), new THREE.Mesh(coreGeo, silver));
-    const holder = new THREE.Group(); holder.add(g);
-    return { obj: holder, update: t => { g.rotation.y = t * 0.9; g.rotation.x = 0.25; } };
-  },
-
-  sand() {
-    const geo = lumpy(0.45, 0.16, 1.6, 2, 5), p = geo.attributes.position, col = [];
-    for (let i = 0; i < p.count; i++) { const k = fbm(p.getX(i) * 10, p.getY(i) * 10, p.getZ(i) * 10, 3); col.push(...lin(mix([0.86, 0.74, 0.52], [0.62, 0.48, 0.3], k))); }
-    geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-    const grain = new THREE.Mesh(geo, phys(0xffffff, { vertexColors: true, roughness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.4 }));
-    grain.scale.set(1.08, 0.86, 0.95);
-    // Glints off the crystal faces.
-    const r = rng(9), gl = []; for (let i = 0; i < 30; i++) { const v = V(r() - 0.5, r() - 0.5, r() - 0.5).normalize().multiplyScalar(0.47); gl.push(v.x, v.y, v.z); }
-    const glints = sparks(gl, 0xffffff, 0.06, { colours: gl.map(() => 1) });
-    const g = new THREE.Group(); g.add(grain, glints);
-    const col2 = glints.geometry.attributes.color;
-    return { obj: g, update: t => { g.rotation.set(t * 0.2, t * 0.3, 0); for (let i = 0; i < col2.count; i++) { const v = Math.max(0, Math.sin(t * 2 + i * 1.7)) ** 12; col2.setXYZ(i, v, v, v); } col2.needsUpdate = true; } };
-  },
-
-  // A hair lying across, measured through its thickness.
-  hair() {
-    const cuticle = canvasTexture(512, 64, (ctx, w, h) => {
-      ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, w, h);
-      for (let x = 0; x < w; x += 9) { ctx.strokeStyle = '#c8c8c8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, 0); for (let y = 0; y <= h; y += 4) ctx.lineTo(x + Math.sin(y * 0.3 + x) * 2.5, y); ctx.stroke(); }
-    }, false);
-    cuticle.wrapS = cuticle.wrapT = THREE.RepeatWrapping; cuticle.repeat.set(2, 1);
-    const fade = canvasTexture(256, 4, (ctx, w) => { const gr = ctx.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, '#000'); gr.addColorStop(0.2, '#fff'); gr.addColorStop(0.8, '#fff'); gr.addColorStop(1, '#000'); ctx.fillStyle = gr; ctx.fillRect(0, 0, w, 4); }, false);
-    const geo = new THREE.CylinderGeometry(0.5, 0.5, 2.6, 48, 1, true); geo.rotateZ(Math.PI / 2);
-    // Map the length along the hair to the fade's u.
-    const p = geo.attributes.position, uv = geo.attributes.uv;
-    for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 2.6 + 0.5, uv.getX(i));
-    const mat = phys(0x5a3a22, { roughness: 0.35, bumpMap: cuticle, bumpScale: 4, alphaMap: fade, transparent: true, sheen: 1, sheenColor: 0xd9a066, clearcoat: 0.5 });
-    const hair = new THREE.Mesh(geo, mat);
-    const holder = new THREE.Group(); holder.add(hair);
-    return { obj: holder, update: t => { hair.rotation.x = t * 0.4; holder.rotation.y = Math.sin(t * 0.3) * 0.35; } };
   },
 
   // The resting red cell's biconcave outline (Evans and Fung), 8 µm across, cut open to show it is packed with

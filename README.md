@@ -107,6 +107,7 @@ as in Molecule Viewer.
 | `js/ribbon.js` | The dial. |
 | `js/wave.js`, `js/scale.js`, `js/field3d.js` | The wave beside a real object, photons, and the 3D fields. |
 | `js/wave3d.js`, `js/models3d.js` | The wave view's 3D layer (lighting, bloom) and the 30 models, textures drawn in code. |
+| `js/midsize.js`, `js/model-kit.js` | The middle-sized models (whale, pitch, bus, ant, phone, coin, sand, hair, the map of Britain) and the pieces all the models share. |
 | `js/beads.js`, `js/micro.js` | Bead models drawn as GPU-shaded spheres: PDB structures, the flu virus, the giant virus, the bacterium. |
 | `js/visible.js`, `js/blackbody.js`, `js/atmosphere.js`, `js/sky.js` | The other views. |
 | `js/journey.js`, `js/sound.js`, `js/links.js`, `js/format.js` | The journey's stops, sound, links to sibling sites, number formatting and parsing. |
@@ -127,13 +128,14 @@ Every dataset and image, with its exact source, citation and licence, is in
   approximate, and labelled so.
 - Sky: NASA (Multiwavelength Milky Way, SDO, Chandra, Hubble, Spitzer, Fermi), ESO, ALMA, Hinode, NRAO and
   ESA/XMM-Newton, each credited as its owner asks.
-- 3D models: ready-made ones from Poly Pizza, each credited under the picture with its author
+- 3D models: two ready-made ones from Poly Pizza (the Eiffel Tower and the person), each credited under the picture with its author
   and licence (CC BY or CC0), fetched and slimmed by `tools/fetch_models.mjs`; the rest are modelled in code.
 - Hot things' example pictures: Wikimedia Commons (ESA/Planck, NASA/IPAC, NASA/ESA Hubble and photographers),
   each credited in the panel with its licence, fetched by `tools/fetch_examples.mjs`; the Sun's is the sky view's SDO picture.
 - Glass: Schott SF11 Sellmeier coefficients. Constants: CODATA 2018 exact SI values.
 - Band edges: ITU-R V.431, ISO 20473, ISO 21348. They are conventions, and the panel says so.
-- Planet maps: [Solar System Scope](https://www.solarsystemscope.com/textures/) (CC BY 4.0, from NASA data). Everest's
+- Planet maps: [Solar System Scope](https://www.solarsystemscope.com/textures/) (CC BY 4.0, from NASA data). Britain and
+  Ireland's coastlines: [Natural Earth](https://www.naturalearthdata.com/) (public domain). Everest's
   heights: Terrain Tiles on AWS Open Data (Mapzen; SRTM and GMTED2010, USGS; ETOPO1, NOAA). Fetched by `tools/fetch_textures.mjs`.
 - Molecules: haemoglobin (PDB 2HHB), DNA (1BNA), the ribosome (7K00) and flu's spikes (3HMG, 2HTY) from the
   [RCSB Protein Data Bank](https://www.rcsb.org) (CC0), each paper cited; built into beads by `tools/build_molecules.mjs`.
