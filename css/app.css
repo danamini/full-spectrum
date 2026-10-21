@@ -25,6 +25,13 @@ html, body { margin: 0; height: 100%; background: var(--ink); color: var(--text)
   font: 400 14px/1.5 var(--body); -webkit-font-smoothing: antialiased; }
 button, input, select { font: inherit; color: inherit; }
 a { color: var(--amber); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+/* Scroll bars: a thin rule-coloured thumb on no track, amber while held. */
+* { scrollbar-width: thin; scrollbar-color: var(--rule-strong) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--rule-strong); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: rgba(160, 180, 220, 0.42); }
+::-webkit-scrollbar-thumb:active { background-color: var(--amber); }
 :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 6px; }
 kbd { font: 500 11px/1 var(--body); padding: 3px 6px; border: 1px solid var(--rule-strong); border-bottom-width: 2px; border-radius: 5px; color: var(--dim); }
 .ic { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
@@ -54,7 +61,7 @@ body[data-view="sky"] .views .sky { display: flex; }
 .sky-stage { position: relative; flex: 1; min-height: 0; border-radius: 14px; overflow: hidden; background: #000; }
 .sky-stage > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 0.6s; }
 .sky-stage > img.on { opacity: 1; }
-.sky-rows { display: none; position: absolute; inset: 0; overflow-y: auto; padding: 8px; scrollbar-width: thin; }
+.sky-rows { display: none; position: absolute; inset: 0; overflow-y: auto; padding: 8px; }
 .sky.strips .sky-stage > img { display: none; }
 .sky.strips .sky-rows { display: grid; gap: 6px; align-content: start; }
 .sky-rows figure { margin: 0; position: relative; opacity: 0.4; transition: opacity 0.4s; cursor: pointer; }
@@ -62,7 +69,7 @@ body[data-view="sky"] .views .sky { display: flex; }
 .sky-rows img { display: block; width: 100%; border-radius: 4px; }
 .sky-rows figcaption { position: absolute; left: 8px; top: 50%; translate: 0 -50%; font-size: 11.5px; color: #fff; text-shadow: 0 1px 4px #000, 0 0 2px #000; }
 .sky.strips .sky-strip { display: none; }
-.sky-strip { display: flex; gap: 6px; overflow-x: auto; flex: none; scrollbar-width: thin; }
+.sky-strip { display: flex; gap: 6px; overflow-x: auto; flex: none; }
 .sky-strip button { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px; border-radius: 10px; cursor: pointer;
   background: var(--glass); border: 1px solid var(--rule); color: var(--dim); font-size: 11.5px; }
 .sky-strip button img { width: 84px; height: 46px; object-fit: cover; border-radius: 6px; display: block; }
@@ -103,8 +110,7 @@ body[data-view="sky"] .views .sky { display: flex; }
 
 /* ---------------------------------------------------------------- details */
 .details { position: fixed; z-index: 4; top: calc(var(--top-h) + 6px); right: var(--pad); width: var(--panel-w);
-  bottom: calc(var(--dial-h) + var(--controls-h) + 8px); overflow-y: auto; border-radius: 16px; padding: 16px 18px 20px;
-  scrollbar-width: thin; scrollbar-color: var(--rule-strong) transparent; }
+  bottom: calc(var(--dial-h) + var(--controls-h) + 8px); overflow-y: auto; border-radius: 16px; padding: 16px 18px 20px; }
 .details h2 { margin: 0 0 4px; font: 800 26px/1 var(--display); text-transform: uppercase; letter-spacing: 0.02em; }
 .details h2 small { display: block; font: 500 13px var(--body); color: var(--dim); text-transform: none; letter-spacing: 0; margin-top: 4px; }
 .details h3 { margin: 16px 0 3px; font: 600 11px var(--body); color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; }
@@ -139,8 +145,25 @@ body[data-view="sky"] .controls [data-for="sky"] { display: flex; }
 .bb { align-items: center; gap: 14px; }
 .slider { display: flex; align-items: center; gap: 10px; color: var(--dim); }
 .slider input { width: clamp(160px, 26vw, 380px); accent-color: var(--amber); }
-.bb select { background: var(--glass); border: 1px solid var(--rule); border-radius: 18px; padding: 6px 12px; color: var(--text); }
-.bb select option { background: #0b1020; }
+.bb select { appearance: none; -webkit-appearance: none; cursor: pointer; padding: 6px 34px 6px 14px; border-radius: 18px;
+  border: 1px solid var(--rule); color: var(--text); background: var(--glass) no-repeat right 12px center / 12px 12px
+  url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%238b96aa' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>"); }
+.bb select:hover { border-color: var(--rule-strong); }
+.bb select:focus-visible { outline: none; border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
+.bb select option { background: #0b1020; color: var(--text); }
+.bb select option:checked { background: var(--amber); color: var(--amber-ink); }
+/* Where the browser lets the open list be styled too (Chromium 135+), it becomes a glass panel like the rest. */
+@supports (appearance: base-select) {
+  .bb select, .bb select::picker(select) { appearance: base-select; }
+  .bb select::picker-icon { display: none; }
+  .bb select::picker(select) { margin-top: 6px; padding: 6px; border: 1px solid var(--rule-strong); border-radius: 14px;
+    background: var(--glass-strong); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    max-height: 60vh; overflow-y: auto; }
+  .bb select option { background: none; padding: 6px 12px; border-radius: 9px; cursor: pointer; }
+  .bb select option::checkmark { display: none; }
+  .bb select option:hover, .bb select option:focus-visible { background: rgba(160, 180, 220, 0.12); outline: none; }
+  .bb select option:checked { background: var(--amber); color: var(--amber-ink); }
+}
 .hint { margin-left: auto; color: var(--faint); font-size: 12px; text-align: right; }
 .dial { position: fixed; z-index: 5; left: 0; right: 0; bottom: 0; padding-bottom: env(safe-area-inset-bottom);
   background: linear-gradient(to top, var(--ink) 75%, rgba(3, 5, 11, 0)); }

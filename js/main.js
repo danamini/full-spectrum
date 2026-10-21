@@ -80,8 +80,8 @@ new ResizeObserver(layout).observe($('#details'));
 // ---------------------------------------------------------------- the cursor moved
 let hashTimer = 0;
 function changed(metres) {
-  // Leave a thing once the cursor has moved off it.
-  if (state.thing && Math.abs(Math.log10(metres / state.thing.m)) > ribbon.span * 0.02) { state.thing = null; ribbon.marked = null; ribbon.dirty = true; }
+  // Leave a thing once the cursor has moved off it (not while the dial is still flying, which may be on its way to it).
+  if (state.thing && !ribbon.anim && Math.abs(Math.log10(metres / state.thing.m)) > ribbon.span * 0.02) { state.thing = null; ribbon.marked = null; ribbon.dirty = true; }
   wave.metres = vis.metres = metres;
   if (air) air.metres = metres;
   sky?.set(metres);
