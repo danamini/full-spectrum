@@ -54,3 +54,20 @@ export function photonNotes(metres) {
 <p>The picture shows a beam of 1 milliwatt, about a laser pointer. At this wavelength it carries ${fmt.count(n.perSecond)} photons a second, ${fmt.count(n.perMetre)} in each metre of beam.</p>
 <p>At long wavelengths each photon carries so little that there are vast numbers of them, and the beam behaves exactly like a smooth wave: radio engineers never need photons. At short wavelengths each photon carries enough to break a chemical bond. That is why ultraviolet burns and X-rays ionise, however dim the light.</p>`;
 }
+
+// The cards under the photon beam: what one photon carries and can do, how many a beam holds, and its push.
+const BEAM = 1e-3;          // watts, as in photonNotes: about a laser pointer
+const RED_CELL = 2.7e-14;   // kg, the mass of one red blood cell (about 27 picograms)
+const G = 9.81;             // m/s², gravity at the Earth's surface
+export function photonFacts(metres, effect, visible) {
+  const ev = P.photonEnergyEV(metres), n = P.photons(metres, BEAM), push = BEAM / P.C;
+  const cells = Math.round(push / (RED_CELL * G));
+  const card = (label, big, text) => `<div class="pf"><p class="pf-label">${label}</p><p class="pf-big">${big}</p><p>${text}</p></div>`;
+  return [
+    card('One photon', fmt.energy(ev), `${fmt.sci(ev * P.EV)} joules: Planck's constant times the frequency, ${fmt.frequency(P.frequency(metres))}.`),
+    card('What one can do', effect.name, effect.text),
+    card('Every second', `${fmt.count(n.perSecond)}`, 'photons in a 1 milliwatt beam, about a laser pointer. Dimmer light means fewer photons, never smaller ones.'),
+    card('Its push', `${fmt.sig(push * 1e12, 2)} piconewtons`, `Light carries momentum. The whole beam pushes on what absorbs it about as hard as ${cells} red blood cells weigh; each photon gives ${fmt.sci(P.H / metres)} kg m/s.`),
+    visible ? card('Your eye', 'About 100', 'photons in a flash are enough for a dark-adapted eye to notice it; only 5 to 14 of them are caught by rods (Hecht, Shlaer and Pirenne, 1942).') : '',
+  ].join('');
+}

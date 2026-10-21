@@ -147,8 +147,8 @@ export class WaveView {
     const exact = perMetre <= MAX_DOTS;
     const n = exact ? Math.max(0, Math.round(perMetre)) : MAX_DOTS;
     const { rgb } = waveColour(λ);
-    const W = rect.w * 0.88, x0 = rect.x + (rect.w - W) / 2, cy = rect.y + rect.h * 0.46;
-    const beam = Math.min(rect.h * 0.34, 160);
+    const W = rect.w * 0.88, x0 = rect.x + (rect.w - W) / 2, cy = rect.y + rect.h * 0.3; // high, to leave room for the cards below
+    const beam = Math.min(rect.h * 0.26, 150);
     // Size and glow grow with energy: from a speck for radio to a flare for gamma.
     const e = Math.min(1, Math.max(0, (Math.log10(ev) + 9) / 24));
     const r = 0.9 + e * 3.6;
@@ -172,10 +172,13 @@ export class WaveView {
     this.dim(x0, cy + beam / 2 + 18, x0 + W, cy + beam / 2 + 18);
     ctx.fillStyle = '#c4ccdb'; ctx.font = '500 12px "IBM Plex Sans", sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('one metre of a 1 milliwatt beam', rect.x + rect.w / 2, cy + beam / 2 + 36);
+    this.below = cy + beam / 2 + 56; // where the cards under the beam can start
     ctx.font = '600 15px "IBM Plex Sans", sans-serif'; ctx.fillStyle = '#e6ebf3';
     const what = exact ? `${n === 1 ? 'one photon' : `${fmt.count(perMetre)} photons`}, each carrying ${fmt.energy(ev)}`
       : `${fmt.count(perMetre)} photons, far too many to draw; each carries just ${fmt.energy(ev)}`;
-    ctx.fillText(what, rect.x + rect.w / 2, cy - beam / 2 - 18);
+    // On a narrow screen, two lines, broken at the semicolon or comma.
+    if (ctx.measureText(what).width < rect.w - 16) ctx.fillText(what, rect.x + rect.w / 2, cy - beam / 2 - 18);
+    else { const i = what.search(/[;,] /); [what.slice(0, i + 1), what.slice(i + 2)].forEach((line, k) => ctx.fillText(line, rect.x + rect.w / 2, cy - beam / 2 - 36 + k * 18)); }
     ctx.restore();
   }
 

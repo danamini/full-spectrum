@@ -112,6 +112,12 @@ await test('wave, 3D fields and photons', async page => {
   for (const mode of ['field', 'photons', 'wave']) {
     await page.click(`.seg [data-mode="${mode}"]`); await wait(page, 1500);
     expect(await page.evaluate(() => spectrum.state.mode) === mode, mode);
+    if (mode === 'photons') {
+      // The cards under the beam: the photon's energy as the readout gives it, and what one can do.
+      const cards = await page.evaluate(() => [...document.querySelectorAll('#photonFacts .pf-big')].map(e => e.textContent));
+      const energy = await page.evaluate(() => document.querySelector('#inEnergy').value);
+      expect(cards.length === 4 && cards[0] === energy && cards[1] === 'Too weak alone', `photon cards: ${cards} (readout ${energy})`);
+    }
   }
   await page.click('.seg [data-mode="field"]'); await wait(page, 800);
   await page.click('[data-polar="circular"]'); await wait(page, 800);

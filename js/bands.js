@@ -125,11 +125,11 @@ export const byKey = key => BANDS.find(b => b.key === key) ?? BANDS.flatMap(b =>
 
 // What one photon has enough energy to do, by its energy in eV (each step is the lowest energy it starts at).
 export const EFFECTS = [
-  { ev: 0, text: 'Less energy than the jiggle of a molecule at room temperature: only many photons together, pushing electrons, do anything.' },
-  { ev: 0.025, text: 'Enough to set molecules spinning and bonds vibrating: it warms what absorbs it.' },
-  { ev: 1.65, text: 'Enough to lift an outer electron, which is what the molecules in your eye need: you can see it.' },
-  { ev: 3.26, text: 'Enough to break chemical bonds: it fades dyes, burns skin and damages DNA.' },
-  { ev: 13.6, text: 'Enough to tear electrons off atoms: ionising radiation.' },
-  { ev: 1.022e6, text: 'Enough to turn into matter: near a nucleus it can become an electron and a positron.' },
+  { ev: 0, name: 'Too weak alone', text: 'Less energy than the jiggle of a molecule at room temperature: only many photons together, pushing electrons, do anything.' },
+  { ev: 0.025, name: 'Warms', text: 'Enough to set molecules spinning and bonds vibrating: it warms what absorbs it.' },
+  { ev: 1.65, name: 'Can be seen', text: 'Enough to lift an outer electron, which is what the molecules in your eye need: you can see it.' },
+  { ev: 3.26, name: 'Breaks bonds', text: 'Enough to break chemical bonds: it fades dyes, burns skin and damages DNA.' },
+  { ev: 13.6, name: 'Ionises', text: 'Enough to tear electrons off atoms: ionising radiation.' },
+  { ev: 1.022e6, name: 'Can make matter', text: 'Enough to turn into matter: near a nucleus it can become an electron and a positron.' },
 ];
 export const effectAt = ev => [...EFFECTS].reverse().find(e => ev >= e.ev);

@@ -14,7 +14,7 @@ import { JOURNEY } from './journey.js';
 import { ANIMALS } from '../data/cones.js';
 import { SOLAR } from '../data/solar.js';
 import * as fmt from './format.js';
-import { fieldNotes, photonNotes, fieldCard } from './notes.js';
+import { fieldNotes, photonNotes, fieldCard, photonFacts } from './notes.js';
 import { MODELS } from '../data/models.js';
 import { OBJECTS } from './scale.js';
 import { initWhatsNew } from './whatsnew.js';
@@ -604,6 +604,16 @@ function frame(now) {
   try { drawView(t); } catch (err) { if (!frame.failed) { frame.failed = true; console.error(err); } }
   requestAnimationFrame(frame);
 }
+// The cards under the photon beam, refreshed when the wavelength changes and placed below the beam.
+let cardsFor = '';
+function photonCards() {
+  const m = ribbon.metres, el = $('#photonFacts');
+  const html = photonFacts(m, effectAt(P.photonEnergyEV(m)), m <= VISIBLE.from && m >= VISIBLE.to);
+  if (html !== cardsFor) { cardsFor = html; el.innerHTML = html; }
+  const r = wave.rect, top = wave.below ?? r.y + r.h * 0.7;
+  Object.assign(el.style, { left: `${r.x + r.w * 0.06}px`, width: `${r.w * 0.88}px`, top: `${top}px`, maxHeight: `${Math.max(0, r.y + r.h - top)}px` });
+}
+
 // A link out to Solar Timeline's explorer, for the things it shows.
 const inSolarTimeline = (body, text) => `<ul class="links"><li><a href="${solarTimeline(body)}" target="_blank" rel="noopener">${esc(text)}</a> <small>Solar Timeline</small></li></ul>`;
 
@@ -626,7 +636,7 @@ function drawView(t) {
       for (const [cls, pos] of [['lab-e', p.e], ['lab-b', p.b], ['lab-go', p.go], ['lab-l', p.l]]) { const el = $(`.field-labels .${cls}`); el.style.transform = `translate(${host.offsetLeft + pos.x}px, ${host.offsetTop + pos.y}px)`; }
       const card = $('#fieldCard');
       card.style.transform = `translate(${host.offsetLeft + host.offsetWidth - card.offsetWidth - 12}px, ${host.offsetTop + 12}px)`;
-    } else { wave.draw(t); waveCredit(wave.shown); }
+    } else { wave.draw(t); waveCredit(wave.shown); if (state.mode === 'photons') photonCards(); }
   } else if (state.view === 'visible') vis.draw(t);
   else if (state.view === 'blackbody') bb.draw(t);
   else if (state.view === 'air') air?.draw(t);
