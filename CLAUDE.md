@@ -25,4 +25,6 @@ Start with `docs/plan.md`: section 10 (next work) and 9 (decisions). The README 
   licence from the source, refuses NC/ND, and writes `data/models.js` and `docs/credits-models.md`; the app
   shows the credit under the model, and `tests/credits.mjs` fails on any model without one. Sketchfab needs
   Daniel's token in `~/.config/full-spectrum/sketchfab-token` (never in the repo).
-- Repo: private `danamini/full-spectrum`. Commit as work lands.
+- **Releases:** `assets/releases.json` is the one record of versions and notes (README, Releases). Add a user-facing
+  item to the `next` release as each change lands; release only when Daniel asks.
+- Repo: public `danamini/full-spectrum` (GitHub Pages at spectrum.moleculeviewer.org from `main`). Commit as work lands.

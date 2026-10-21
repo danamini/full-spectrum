@@ -1,0 +1,26 @@
+{
+  "about": "Full Spectrum's versions and what each brought, as Solar Timeline does it. One definition: the header's version, the What's new panel (js/whatsnew.js) and the landing page read this. A release is 'released' or 'next'. GitHub Pages publishes main as it is, so a 'next' release shows only away from the live site; date it and set it 'released' when it ships, and make package.json's version match (tests/releases.mjs). An item's `go`: an address in the app, opened by Show me. `kind`: new, better or fix.",
+  "live": "spectrum.moleculeviewer.org",
+  "feedback": "https://github.com/danamini/full-spectrum/issues/new",
+  "releases": [
+    {
+      "version": "0.0.1",
+      "stage": "Alpha",
+      "status": "released",
+      "date": "2026-10-21",
+      "title": "The whole spectrum, end to end",
+      "items": [
+        {"kind": "new", "text": "One dial from radio to gamma rays, 3 Hz to 12 PeV, with the wavelength, frequency and photon energy at the cursor; type any of them to jump there, and every place has its own address", "go": "#visible"},
+        {"kind": "new", "text": "Forty real things at their wavelengths, from the Schumann resonance to the most energetic photon ever seen, each with what makes it and what it does", "go": "#thing-hydrogen-21"},
+        {"kind": "new", "text": "The wave at a scale you can feel: the light at the cursor beside a 3D model of something the same size, from Jupiter to a proton", "go": "#thing-fm"},
+        {"kind": "new", "text": "Light as electric and magnetic fields in 3D, linear or circular, labelled, with how strong they are in sunlight; or as photons, counted in a beam (Wave, Fields in 3D and Photons, under the picture)"},
+        {"kind": "new", "text": "Visible light up close: a prism ray-traced through real glass, the lines of five elements against the dark lines in sunlight, the Sun's spectrum above and below the air, and how people and other animals see colour", "go": "#prism"},
+        {"kind": "new", "text": "Hot things: why everything glows, from the cosmic microwave background to the Sun's corona, and where each one's power goes", "go": "#blackbody-sun"},
+        {"kind": "new", "text": "Through the air: what reaches the ground across the spectrum, what absorbs the rest, and twelve telescopes, on mountains or in space and why", "go": "#air"},
+        {"kind": "new", "text": "The sky in every light: the Milky Way, the Sun and the Crab Nebula in radio, infrared, visible, X-rays and gamma rays, each picture explained", "go": "#sky-milkyway"},
+        {"kind": "new", "text": "A guided journey from the longest waves to the shortest, a tour of every view, Surprise me, sound, and a picture to save", "go": "#journey"},
+        {"kind": "new", "text": "What's new, here, and a way to send feedback"}
+      ]
+    }
+  ]
+}

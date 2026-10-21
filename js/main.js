@@ -16,7 +16,7 @@ import { SOLAR } from '../data/solar.js';
 import * as fmt from './format.js';
 import { fieldNotes, photonNotes, fieldCard } from './notes.js';
 import { MODELS } from '../data/models.js';
-import { VERSION } from './version.js';
+import { initWhatsNew } from './whatsnew.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -566,7 +566,7 @@ $('#sheetToggle').addEventListener('click', () => {
 // ---------------------------------------------------------------- keyboard
 addEventListener('keydown', e => {
   if (e.target.matches('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
-  if ($('#help').open) return;
+  if ($('#help').open || $('#whatsnew').open) return;
   const k = e.key;
   const pan = ribbon.span * (e.shiftKey ? 0.2 : 0.03);
   switch (k) {
@@ -624,7 +624,7 @@ function drawView(t) {
 }
 
 // ---------------------------------------------------------------- start
-$$('[data-version]').forEach(el => { el.textContent = VERSION; });
+initWhatsNew();
 setKelvin(5772);
 setVis('prism');
 setMode('wave');

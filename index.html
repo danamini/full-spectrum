@@ -41,7 +41,7 @@
 
   <header class="top">
     <a class="mark" href="#" aria-label="Full Spectrum, home">Full<br>Spectrum</a>
-    <span class="stage" title="An early release: expect rough edges and changes">Alpha <span data-version></span></span>
+    <button type="button" class="stage" data-version>Alpha</button>
     <nav class="sections" aria-label="Sections">
       <a href="#visible" data-section="spectrum">Spectrum</a>
       <a href="#prism" data-section="visible">Visible light</a>
@@ -117,7 +117,7 @@
   <!-- The landing page. -->
   <section class="landing" id="landing">
     <div class="landing-inner">
-      <p class="stage">Alpha <span data-version></span> · an early release</p>
+      <p class="stage"><span data-version>Alpha</span> · an early release</p>
       <h2 class="title">Full<br>Spectrum</h2>
       <p class="lede">All light is the same thing at different sizes. Radio waves longer than the Earth, the colours you see, gamma rays smaller than a nucleus: thirty powers of ten of one spectrum, end to end.</p>
       <div class="cta">
@@ -132,7 +132,7 @@
         <a href="#air"><b>Through the air</b><small>What reaches the ground</small></a>
         <a href="#sky"><b>The sky</b><small>One sky, every light</small></a>
       </div>
-      <p class="fine">This is an alpha: some things are unfinished and will change. Data from the CIE, NIST, ASTM, NASA and others: see <a href="https://github.com/danamini/full-spectrum#data">sources</a>. Sister site: <a href="https://moleculeviewer.org">Molecule Viewer</a>.</p>
+      <p class="fine">This is an alpha: some things are unfinished and will change. Data from the CIE, NIST, ASTM, NASA and others: see <a href="https://github.com/danamini/full-spectrum#data">sources</a>. Sister site: <a href="https://moleculeviewer.org">Molecule Viewer</a>. <a href="#" data-whatsnew hidden>What's new</a> · <a data-feedback target="_blank" rel="noopener" hidden>Feedback</a></p>
     </div>
   </section>
 
@@ -143,6 +143,8 @@
 
   <div class="tip" id="tip" hidden></div>
   <div class="toast" id="toast" hidden></div>
+
+  <dialog class="help whatsnew" id="whatsnew" aria-label="What's new"></dialog>
 
   <dialog class="help" id="help">
     <h2>Getting around</h2>

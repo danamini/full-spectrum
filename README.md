@@ -1,7 +1,21 @@
 # Full Spectrum
 
-**Alpha, version 0.0.1** (`js/version.js`, kept equal to `package.json`). An early release: some things are unfinished and will change. The site says so in its header
-and on the landing page.
+**Alpha 0.0.1.** An early release: some things are unfinished and will change. The site says so in its header
+and on the landing page, and its What's new lists every version.
+
+## Releases
+
+Versions and their notes live in [assets/releases.json](assets/releases.json): the header's version, the What's
+new panel (with Show me links into the app) and the landing page read it, as in Solar Timeline. GitHub Pages
+publishes `main` as it is, so:
+
+1. As work lands, add items to the release marked `"status": "next"` at the top (start one if there is none):
+   `new`, `better` or `fix`, with a `go` address where there is something to show. Until it is released it
+   shows only away from the live site, marked In progress.
+2. To release: set its `status` to `released` and its `date`, set `package.json`'s `version` to match,
+   run `npm test`, commit, tag `vX.Y.Z` and push both.
+
+Feedback from the panel opens a GitHub issue with the version and page filled in.
 
 The whole electromagnetic spectrum, end to end: radio waves longer than the Earth down to gamma rays
 smaller than a nucleus, thirty powers of ten on one dial. Visible light is drawn in its real colours, every

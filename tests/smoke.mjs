@@ -47,7 +47,12 @@ async function test(name, fn, { viewport = { width: 1440, height: 900 }, mobile 
 const expect = (cond, msg) => { if (!cond) throw new Error(msg); };
 
 const wait = (page, ms) => page.waitForTimeout(ms);
-const go = async (page, hash, ms = 2200) => { await page.goto(`${BASE}#${hash}`); await wait(page, ms); };
+// Go to an address, then wait until the dial has stopped moving: with the 3D models loading and compiling, a busy
+// software renderer can hold up the animation past any fixed wait.
+const go = async (page, hash, ms = 2200) => {
+  await page.goto(`${BASE}#${hash}`); await wait(page, ms);
+  await page.waitForFunction(() => !window.spectrum?.ribbon.anim, null, { timeout: 10000 }).catch(() => {});
+};
 const app = page => page.evaluate(() => ({ view: spectrum.state.view, metres: spectrum.ribbon.metres, span: spectrum.ribbon.span, name: document.querySelector('#name').textContent, landing: document.body.classList.contains('at-landing') }));
 const near = (a, b, rel = 0.02) => Math.abs(Math.log(a / b)) < rel;
 
@@ -169,6 +174,28 @@ await test('through the air and the sky', async page => {
   await page.click('#details [data-picture="0"]'); await wait(page, 1800);
   const first = await page.evaluate(() => [document.querySelector('#details .thing .known')?.textContent, spectrum.state.sky.images[0].label]);
   expect(first[0] === first[1], `picked the first picture, panel shows "${first[0]}"`);
+});
+
+await test("what's new: the version, the panel and every Show me", async page => {
+  await page.goto(BASE); await wait(page, 1200);
+  const badge = page.locator('header button.stage');
+  expect(/^Alpha \d+\.\d+\.\d+$/.test(await badge.textContent()), `badge says "${await badge.textContent()}"`);
+  expect(await badge.evaluate(b => b.classList.contains('unseen')), 'no dot before the panel is seen');
+  await badge.click(); await wait(page, 300);
+  expect(await page.locator('#whatsnew').evaluate(d => d.open), 'panel did not open');
+  expect(await page.locator('#whatsnew li').count() > 3, 'no release notes');
+  expect((await page.locator('#whatsnew [data-feedback]').getAttribute('href')).includes('issues/new'), 'feedback link');
+  expect(!(await badge.evaluate(b => b.classList.contains('unseen'))), 'dot still on after reading');
+  const gos = await page.locator('#whatsnew .wn-go').evaluateAll(as => as.map(a => a.getAttribute('href')));
+  for (const go of gos) {
+    if (!(await page.locator('#whatsnew').evaluate(d => d.open))) { await badge.click(); await wait(page, 200); }
+    await page.click(`#whatsnew .wn-go[href="${go}"]`); await wait(page, 120);
+    // The journey sets off from its first stop, so it is checked by running rather than by its address.
+    const ok = go === '#journey' ? await page.evaluate(() => !!spectrum.state.journey) : await page.evaluate(() => location.hash) === go;
+    expect(ok, `Show me ${go} landed on ${await page.evaluate(() => location.hash)}`);
+    expect(!(await page.locator('#whatsnew').evaluate(d => d.open)), `panel still open after ${go}`);
+    await page.evaluate(() => spectrum.state.journey && document.querySelector('#captionStop').click());
+  }
 });
 
 await test('journey, tour, surprise and the keyboard', async page => {

@@ -100,6 +100,27 @@ body[data-view="sky"] .views .sky { display: flex; }
 .stage { flex: none; margin: 0 0 0 -14px; padding: 2px 7px; border: 1px solid var(--amber); border-radius: 10px; color: var(--amber);
   font: 600 10px/1.3 var(--body); letter-spacing: 0.08em; text-transform: uppercase; }
 .landing .stage { display: inline-block; margin: 0 0 14px; }
+button.stage { position: relative; background: none; cursor: pointer; }
+button.stage:hover, button.stage:focus-visible { background: rgba(242, 180, 90, 0.12); outline: none; }
+button.stage.unseen::after { content: ''; position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); }
+/* What's new (js/whatsnew.js): releases newest first, each item's kind, Show me, and feedback at the foot. */
+.whatsnew { max-width: 600px; width: calc(100vw - 32px); max-height: min(80vh, 760px); }
+.whatsnew[open] { display: flex; flex-direction: column; }
+.wn-list { overflow-y: auto; margin: 0 -6px; padding: 0 6px; }
+.wn-rel { padding: 10px 0 12px; border-top: 1px solid var(--rule); }
+.wn-rel.next { opacity: 0.85; }
+.wn-rh { display: flex; align-items: baseline; gap: 10px; margin: 0; }
+.wn-rh b { font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--amber); font-size: 12px; }
+.wn-rh span { color: var(--faint); font-size: 12px; }
+.wn-rel.next .wn-rh span { color: var(--amber); }
+.wn-title { margin: 2px 0 8px; color: var(--text); font: 800 20px/1.1 var(--display); text-transform: uppercase; }
+.wn-rel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.wn-rel li { display: grid; grid-template-columns: 50px 1fr auto; gap: 10px; align-items: baseline; color: #c4ccdb; line-height: 1.4; }
+.wn-kind { font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+.wn-kind.new { color: #8ef0b0; } .wn-kind.better { color: #7cc4ff; } .wn-kind.fix { color: var(--amber); }
+.wn-go { color: var(--amber); white-space: nowrap; font-size: 12.5px; }
+.wn-foot { display: flex; justify-content: space-between; gap: 12px; margin: 12px 0 14px; padding-top: 12px; border-top: 1px solid var(--rule); color: var(--dim); }
+.wn-foot a { color: var(--amber); }
 .sections { display: flex; gap: 4px; }
 .sections a { color: var(--dim); text-decoration: none; padding: 7px 12px; border-radius: 18px; white-space: nowrap; }
 .sections a:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); }
