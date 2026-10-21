@@ -97,6 +97,9 @@ body[data-view="sky"] .views .sky { display: flex; }
 .top { position: fixed; top: 0; left: 0; right: 0; height: var(--top-h); display: flex; align-items: center; gap: 24px; padding: 0 var(--pad); z-index: 9; }
 .mark { font: 800 17px/0.86 var(--display); color: var(--text); text-decoration: none; letter-spacing: 0.02em; flex: none;
   background: linear-gradient(90deg, #ff6a4a, #ffd84a 35%, #4ae08a 60%, #4a9cff 80%, #a46aff); -webkit-background-clip: text; background-clip: text; color: transparent; text-transform: uppercase; }
+.stage { flex: none; margin: 0 0 0 -14px; padding: 2px 7px; border: 1px solid var(--amber); border-radius: 10px; color: var(--amber);
+  font: 600 10px/1.3 var(--body); letter-spacing: 0.08em; text-transform: uppercase; }
+.landing .stage { display: inline-block; margin: 0 0 14px; }
 .sections { display: flex; gap: 4px; }
 .sections a { color: var(--dim); text-decoration: none; padding: 7px 12px; border-radius: 18px; white-space: nowrap; }
 .sections a:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); }

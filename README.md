@@ -1,5 +1,8 @@
 # Full Spectrum
 
+**Alpha.** An early release: some things are unfinished and will change. The site says so in its header
+and on the landing page.
+
 The whole electromagnetic spectrum, end to end: radio waves longer than the Earth down to gamma rays
 smaller than a nucleus, thirty powers of ten on one dial. Visible light is drawn in its real colours, every
 wave is animated beside something of the same size, and each band says what makes it, what uses it and
