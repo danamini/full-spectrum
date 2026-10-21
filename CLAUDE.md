@@ -12,8 +12,9 @@ Start with `docs/plan.md`: section 10 (next work) and 9 (decisions). The README 
   say so rather than drawing hard edges.
 - **Real colour vs false colour:** only the visible band is drawn in real (CIE-derived) colour;
   everything else is false colour, and must look it.
-- **This repo is public.** Never name, link or describe Daniel's unpublished projects here (code, docs or
-  commit messages); link only to public sibling apps (`js/links.js`).
+- **This repo is public.** Link sibling apps only through `js/links.js`. Solar Timeline: only its public app and
+  film at solartimeline.org may be linked; its repo is private, so never copy its code, data, docs or plans here,
+  or link to the repo. Don't name Daniel's other unpublished projects.
 - **Checks:** `node tests/physics.mjs` (seconds) as you go; `npm test` (about five minutes, a headless browser)
   before committing. A fixed bug gets a test. `node tools/shot.mjs <url> <dir> <hash>...` for screenshots;
   look at them before calling a visual change done.

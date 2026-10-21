@@ -129,6 +129,7 @@ Every dataset and image, with its exact source, citation and licence, is in
   and licence (CC BY or CC0), fetched and slimmed by `tools/fetch_models.mjs`; the rest are modelled in code.
 - Glass: Schott SF11 Sellmeier coefficients. Constants: CODATA 2018 exact SI values.
 - Band edges: ITU-R V.431, ISO 20473, ISO 21348. They are conventions, and the panel says so.
+- The proton's quarks, gluons and sea are [Molecule Viewer](https://moleculeviewer.org)'s (same author, MIT), in `js/nucleon.js`.
 - Software: [three.js](https://threejs.org) r170 (MIT). Fonts: Big Shoulders Display and IBM Plex Sans via
   Google Fonts (SIL Open Font License). Tests use Playwright (Apache 2.0); the model tools use glTF Transform (MIT), meshoptimizer (MIT) and sharp
   (Apache 2.0).

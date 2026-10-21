@@ -187,6 +187,15 @@ await test('one 3D fields view, however it is asked for', async page => {
   expect(s.credit === 'none', 'the wave view\'s model credit shows over the fields');
 });
 
+await test('links into Solar Timeline', async page => {
+  await go(page, 'sky-sun', 2600);
+  expect(await page.locator('#details a[href="https://solartimeline.org/explorer#sun"]').count() === 1, 'no Sun link in the sky view');
+  await go(page, 'blackbody-corona', 1500);
+  expect(await page.locator('#details a[href="https://solartimeline.org/explorer#sun"]').count() === 1, 'no Sun link for the corona');
+  await go(page, 'm-1e8', 3000);
+  expect(await page.locator('#waveCredit a[href="https://solartimeline.org/explorer#jupiter"]').count() === 1, 'no Jupiter link under the wave');
+});
+
 await test("what's new: the version, the panel and every Show me", async page => {
   await page.goto(BASE); await wait(page, 1200);
   const badge = page.locator('header button.stage');

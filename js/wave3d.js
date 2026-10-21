@@ -173,7 +173,7 @@ export class WaveStage {
   render(t) {
     const m = this.current;
     if (m) {
-      m.update(t, m.px);
+      m.update(t, m.px, m.px * this.renderer.getPixelRatio() * this.camera.position.z);
       // Glowing points are sized in the model's units; turn that into the size three wants at this scale.
       const k = m.px / Math.tan((FOV / 2) * Math.PI / 180);
       for (const s of m.sparks) s.material.size = s.userData.base * k;

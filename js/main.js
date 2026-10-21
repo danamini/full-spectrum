@@ -4,7 +4,7 @@ import * as P from './physics.js';
 import { BANDS, SPAN, bandAt, subAt, byKey, effectAt } from './bands.js';
 import { THINGS, thingByKey } from './things.js';
 import { spectral, css, VISIBLE, blackbody as glowColour } from './colour.js';
-import { moleculeViewer } from './links.js';
+import { moleculeViewer, solarTimeline, SOLAR_BODIES } from './links.js';
 import { Ribbon } from './ribbon.js';
 import { WaveView, waveColour } from './wave.js';
 import { VisibleView, VIEWS as VIS_VIEWS } from './visible.js';
@@ -16,6 +16,7 @@ import { SOLAR } from '../data/solar.js';
 import * as fmt from './format.js';
 import { fieldNotes, photonNotes, fieldCard } from './notes.js';
 import { MODELS } from '../data/models.js';
+import { OBJECTS } from './scale.js';
 import { initWhatsNew } from './whatsnew.js';
 
 const $ = s => document.querySelector(s);
@@ -174,6 +175,7 @@ function details() {
     const k = state.kelvin, pk = P.wienPeak(k), preset = bbPreset();
     html += `<h2>${preset ? esc(preset.name) : 'A blackbody'}</h2><p class="big">${fmt.kelvin(k)} · peak ${fmt.length(pk)} (${esc(bandAt(pk).name.toLowerCase())})</p><p>${esc(glowText(k))}</p>`;
     if (preset?.about) html += `<p>${esc(preset.about)}</p>`;
+    if (preset?.key === 'sun' || preset?.key === 'corona') html += inSolarTimeline('sun', 'The Sun in 3D, in Solar Timeline');
     html += `<h3>Examples</h3><ul class="things examples">${PRESETS.map(p => `<li><a href="#blackbody-${p.key}"${p === preset ? ' aria-current="true"' : ''}><span><i class="swatch" style="${swatch(p.k)}"></i>${esc(p.name)}</span><small>${fmt.kelvin(p.k)}</small></a></li>`).join('')}</ul>`;
     const sh = bbShares(k), pct = x => (x * 100 >= 99.95 ? 'all' : x * 100 < 0.01 ? '<0.01%' : `${fmt.sig(x * 100, 2)}%`);
     html += `<h3>Where its power goes</h3><ul class="shares">${[['Infrared and longer', sh.infrared], ['Visible', sh.visible], ['Ultraviolet', sh.ultraviolet], ['X-rays and shorter', sh.xray]].map(([n, x]) => `<li><span>${n}</span><span class="bar" style="--w:${(x * 100).toFixed(2)}%"></span><b>${pct(x)}</b></li>`).join('')}</ul>`;
@@ -190,6 +192,7 @@ function details() {
       html += `<div class="thing"><p class="known">${esc(cur.label)}</p><p class="range">${fmt.length(cur.metres)} · ${fmt.frequency(P.frequency(cur.metres))} · ${fmt.energy(P.photonEnergyEV(cur.metres))}</p>`;
       html += `<h3>What you are seeing</h3><p>${esc(cur.seeing)}</p><h3>The colours</h3><p>${esc(cur.colours)}</p><h3>Taken from</h3><p>${esc(cur.where)}</p></div>`;
     }
+    if (o.key === 'sun') html += inSolarTimeline('sun', 'The Sun in 3D, in Solar Timeline');
     html += `<h3>Every picture</h3><ul class="things pictures">${o.images.map((im, i) => `<li><button type="button" data-picture="${i}"${im === cur ? ' aria-current="true"' : ''}><span>${esc(bandAt(im.metres).name)}<small>${fmt.length(im.metres)}</small></span><span class="short">${esc(im.short)}</span></button></li>`).join('')}</ul>`;
     html += `<p class="note">Each picture shows the same object in a different light: different matter, at different temperatures, shines in each. Tune the spectrum below, or pick a picture. Pictures in light we cannot see are given false colours.</p>`;
   } else {
@@ -601,13 +604,18 @@ function frame(now) {
   try { drawView(t); } catch (err) { if (!frame.failed) { frame.failed = true; console.error(err); } }
   requestAnimationFrame(frame);
 }
+// A link out to Solar Timeline's explorer, for the things it shows.
+const inSolarTimeline = (body, text) => `<ul class="links"><li><a href="${solarTimeline(body)}" target="_blank" rel="noopener">${esc(text)}</a> <small>Solar Timeline</small></li></ul>`;
+
 // Who made the ready-made model on show, and its licence (data/models.js; the code-drawn ones are our own).
 let creditFor;
 function waveCredit(key) {
   if (key === creditFor) return;
   creditFor = key;
   const m = MODELS[key], a = (href, text) => (href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text));
-  $('#waveCredit').innerHTML = m ? `3D model: ${a(m.source, m.title)} by ${a(m.authorUrl, m.author)}, ${esc(m.site)} · ${a(m.licenceUrl, m.licence)}` : '';
+  const body = SOLAR_BODIES[key], name = OBJECTS.find(o => o.key === key)?.name.replace(/^The /, 'the ');
+  $('#waveCredit').innerHTML = m ? `3D model: ${a(m.source, m.title)} by ${a(m.authorUrl, m.author)}, ${esc(m.site)} · ${a(m.licenceUrl, m.licence)}`
+    : body ? `Fly round ${a(solarTimeline(body), name)} in Solar Timeline` : '';
 }
 function drawView(t) {
   if (state.view === 'spectrum') {

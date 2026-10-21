@@ -1,10 +1,12 @@
 // The things of known size from scale.js, as small 3D models. Each builder returns an Object3D whose measured
 // size is one unit: its width, or its height for tall things (the thickness for a hair and DNA, laid flat).
-// Some also return update(t, px), called every frame with the time and the unit's size in screen pixels.
+// Some also return update(t, px, perUnit), called every frame with the time, the unit's size in screen pixels,
+// and drawing-buffer pixels per unit at a distance of one (for point sizes).
 // Textures are drawn in code, so nothing is downloaded.
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { proton as protonCloud, PROJ, RADIUS as PROTON_RADIUS } from './nucleon.js';
 
 const TAU = Math.PI * 2;
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -576,34 +578,14 @@ const MODELS = {
     } };
   },
 
+  // Molecule Viewer's proton (js/nucleon.js), sized so its charge radius fills the unit.
   proton() {
-    const g = new THREE.Group();
-    g.add(glowShell(new THREE.SphereGeometry(0.5, 48, 32), '#ff6a5a', { power: 1.6, strength: 0.7 }));
-    const colours = [new THREE.Color(0xff3030), new THREE.Color(0x20c040), new THREE.Color(0x3a6aff)];
-    // Two up quarks and a down quark, each carrying a colour charge they swap by exchanging gluons.
-    const quarks = colours.map(c => { const q = new THREE.Mesh(new THREE.SphereGeometry(0.075, 32, 24), std(0x000000, { emissive: c.clone(), emissiveIntensity: 1.5 })); g.add(q); return q; });
-    const flux = [0, 1, 2].map(() => { const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 40 }, () => V(0, 0, 0))), new THREE.LineBasicMaterial({ color: 0xffd080, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending })); g.add(l); return l; });
-    // Quark–antiquark pairs that flicker in and out of the sea.
-    const sea = sparks(new Array(60 * 3).fill(0), 0xffffff, 0.03, { colours: new Array(60 * 3).fill(1), opacity: 0.5 }); g.add(sea);
-    const sp = sea.geometry.attributes.position, sc = sea.geometry.attributes.color;
-    const at = [V(), V(), V()];
-    return { obj: g, update: t => {
-      quarks.forEach((q, i) => { const a = t * 0.6 + i * TAU / 3; q.position.set(Math.cos(a) * 0.2 + Math.sin(t * 1.7 + i) * 0.03, Math.sin(a) * 0.2, Math.sin(t * 1.3 + i * 2) * 0.12); at[i].copy(q.position); q.material.emissive.copy(colours[(i + Math.floor(t / 1.6)) % 3]); });
-      flux.forEach((l, i) => {
-        const a = at[i], b = at[(i + 1) % 3], p = l.geometry.attributes.position, d = b.clone().sub(a), n = V(-d.y, d.x, 0.3).normalize();
-        for (let k = 0; k < 40; k++) { const u = k / 39, w = Math.sin(u * Math.PI) * Math.sin(u * 30 - t * 12) * 0.025; p.setXYZ(k, a.x + d.x * u + n.x * w, a.y + d.y * u + n.y * w, a.z + d.z * u + n.z * w); }
-        p.needsUpdate = true;
-      });
-      for (let k = 0; k < 60; k++) {
-        const life = (t * 0.9 + hash(k, 1, 1)) % 1, seed = Math.floor(t * 0.9 + hash(k, 1, 1));
-        const d = V(hash(k, seed, 2) - 0.5, hash(k, seed, 3) - 0.5, hash(k, seed, 4) - 0.5).normalize().multiplyScalar(0.12 + 0.3 * hash(k, seed, 5));
-        sp.setXYZ(k, d.x, d.y, d.z); const v = Math.sin(life * Math.PI) ** 2, c = colours[k % 3]; sc.setXYZ(k, c.r * v, c.g * v, c.b * v);
-      }
-      sp.needsUpdate = sc.needsUpdate = true;
-      g.rotation.y = t * 0.15;
-    } };
+    const p = protonCloud(), g = new THREE.Group(), inner = 0.5 / PROTON_RADIUS;
+    p.group.scale.setScalar(inner); g.add(p.group);
+    // Molecule Viewer shows it filling the screen; here it is a few hundred pixels across, so its points are
+    // drawn larger than to scale (up to 2x) to keep the cloud's look.
+    return { obj: g, update: (t, px, perUnit) => { if (perUnit) PROJ.value = perUnit * inner * Math.min(2, Math.max(1, 800 / px)); p.update(t); g.rotation.y = t * 0.15; } };
   },
-
 };
 
 // A route between two places: a pin at each end, the way between, and a dot that travels it.
