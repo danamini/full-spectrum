@@ -488,10 +488,8 @@ const MODELS = {
       for (let i = 0; i < 16; i++) { ctx.fillStyle = cols[i % cols.length]; ctx.beginPath(); ctx.roundRect(22 + (i % 4) * 52, 170 + Math.floor(i / 4) * 64, 40, 40, 10); ctx.fill(); }
       ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.roundRect(16, h - 80, w - 32, 60, 20); ctx.fill();
     });
-    const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.43, 0.94), std(0x000000, { emissive: 0xffffff, emissiveMap: screenTex, emissiveIntensity: 1.1, roughness: 0.05 }));
-    screen.position.z = 0.0281; g.add(screen);
-    const cover = new THREE.Mesh(new THREE.PlaneGeometry(0.43, 0.94), phys(0x000000, { transparent: true, opacity: 0.25, roughness: 0, clearcoat: 1 }));
-    cover.position.z = 0.0285; g.add(cover);
+    const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.43, 0.94), std(0x000000, { emissive: 0xffffff, emissiveMap: screenTex, emissiveIntensity: 1.1, roughness: 0.05, metalness: 0.3 }));
+    screen.position.z = 0.03; g.add(screen); // clear of the frame's face, so the two never fight for depth
     const bump = new THREE.Mesh(new RoundedBoxGeometry(0.2, 0.2, 0.02, 3, 0.04), phys(0x3a4254, { metalness: 0.6, roughness: 0.2 }));
     bump.position.set(-0.11, 0.36, -0.03); g.add(bump);
     for (const [x, y] of [[-0.155, 0.41], [-0.07, 0.41], [-0.155, 0.32]]) {
