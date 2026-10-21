@@ -11,7 +11,36 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { Line2 } from 'three/addons/lines/Line2.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { build } from './models3d.js';
+import { MODELS } from '../data/models.js';
+import { OBJECTS } from './scale.js';
+
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+
+// A ready-made model (data/models.js), loaded in the background. Laid with its length across the screen,
+// scaled so its measured size (its height for tall things) is one unit, centred, turning gently to and fro,
+// and playing its own animation if it has one.
+function readyMade(key) {
+  const info = MODELS[key], tall = OBJECTS.find(o => o.key === key)?.tall;
+  const holder = new THREE.Group(), turn = new THREE.Group();
+  holder.rotation.x = 0.12; holder.add(turn);
+  let mixer = null, last = 0;
+  loader.load(info.file, gltf => {
+    const scene = gltf.scene, box = new THREE.Box3();
+    // Pose an animated model first, so it is measured as it will be drawn.
+    const clip = info.clip && gltf.animations.find(a => new RegExp(info.clip, 'i').test(a.name));
+    if (clip) { mixer = new THREE.AnimationMixer(scene); mixer.clipAction(clip).play(); mixer.update(0); }
+    const measure = () => { scene.updateMatrixWorld(true); return box.setFromObject(scene, true); };
+    let size = measure().getSize(new THREE.Vector3());
+    if (!tall && size.z > size.x) { scene.rotation.y = Math.PI / 2; size = measure().getSize(new THREE.Vector3()); }
+    scene.scale.multiplyScalar(1 / (tall ? size.y : size.x));
+    scene.position.sub(measure().getCenter(new THREE.Vector3()));
+    turn.add(scene);
+  }, undefined, err => console.warn(`model ${key}:`, err));
+  return { obj: holder, update: t => { mixer?.update(Math.min(0.1, t - last)); last = t; turn.rotation.y = Math.sin(t * 0.3) * 0.6; } };
+}
 
 const FOV = 24;
 const MAX_POINTS = 600;
@@ -88,7 +117,7 @@ export class WaveStage {
     if (!key) return;
     let m = this.models.get(key);
     if (!m) {
-      const b = build(key);
+      const b = MODELS[key] ? readyMade(key) : build(key);
       if (!b) return;
       m = { key, ...b, sparks: [] };
       m.obj.traverse(o => { if (o.isPoints && o.userData.base) m.sparks.push(o); });

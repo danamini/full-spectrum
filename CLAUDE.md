@@ -21,4 +21,8 @@ Start with `docs/plan.md`: section 10 (next work) and 9 (decisions). The README 
   pattern (`pkill -f http.server`): it kills theirs too. Stop only the PID you started. The tests pick their own port.
 - **Licences:** `data/cie1931.js` is CC BY-SA 4.0 (share-alike); NIST lines are © NIST with the citation they
   ask for. A new image or dataset goes in `docs/credits-*.md` with its licence before it ships.
+  3D models come only through `tools/fetch_models.mjs` (add a line to its SOURCES), which reads author and
+  licence from the source, refuses NC/ND, and writes `data/models.js` and `docs/credits-models.md`; the app
+  shows the credit under the model, and `tests/credits.mjs` fails on any model without one. Sketchfab needs
+  Daniel's token in `~/.config/full-spectrum/sketchfab-token` (never in the repo).
 - Repo: private `danamini/full-spectrum`. Commit as work lands.

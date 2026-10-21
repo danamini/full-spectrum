@@ -68,6 +68,7 @@ export class WaveView {
     const ocx = rect.x + rect.w / 2;
     const shown = spx >= 3 && spx <= W * 1.6;
     this.stage?.model(shown ? obj.key : null, ocx, cy, spx);
+    this.shown = shown && this.stage ? obj.key : null; // for the credit under the picture
     ctx.save();
     if (shown) {
       // Its size, measured underneath (or beside, for tall things).
@@ -158,6 +159,7 @@ export class WaveView {
     ctx.fillStyle = g; ctx.fillRect(x0, cy - beam / 2, W, beam);
     const speed = 0.16, pts = [];
     for (let i = 0; i < n; i++) { const d = this.dots[i]; pts.push(x0 + (((d.x + t * speed) % 1) * W), cy + d.y * beam); }
+    this.shown = null;
     if (this.stage) { this.stage.model(null); this.stage.wave(null); this.stage.photons(pts, r * 2 + 3 + e * 10, rgb, e); }
     else {
       ctx.fillStyle = `rgb(${rgb.join(' ')})`;

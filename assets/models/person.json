@@ -1,0 +1,13 @@
+{
+  "key": "person",
+  "title": "Man",
+  "author": "Quaternius",
+  "authorUrl": "https://poly.pizza/u/Quaternius",
+  "source": "https://poly.pizza/m/HMnuH5geEG",
+  "site": "Poly Pizza",
+  "licence": "CC0 1.0",
+  "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "changes": "textures resized to at most 1024 px and saved as WebP; compressed",
+  "clip": "idle",
+  "fetched": "2026-10-21"
+}

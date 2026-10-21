@@ -15,6 +15,7 @@ import { ANIMALS } from '../data/cones.js';
 import { SOLAR } from '../data/solar.js';
 import * as fmt from './format.js';
 import { fieldNotes, photonNotes, fieldCard } from './notes.js';
+import { MODELS } from '../data/models.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -82,6 +83,7 @@ function layout() {
   for (const v of [wave, vis, bb, air]) if (v) v.rect = rect;
   const fh = $('#fieldHost');
   Object.assign(fh.style, { left: `${rect.x}px`, top: `${rect.y}px`, width: `${rect.w}px`, height: `${rect.h}px` });
+  Object.assign($('#waveCredit').style, { left: `${rect.x}px`, width: `${rect.w}px`, top: `${rect.y + rect.h - 34}px` });
   const sh = $('#skyHost');
   Object.assign(sh.style, { left: `${rect.x}px`, top: `${rect.y}px`, width: `${rect.w}px`, height: `${rect.h}px` });
   field?.resize();
@@ -599,6 +601,14 @@ function frame(now) {
   try { drawView(t); } catch (err) { if (!frame.failed) { frame.failed = true; console.error(err); } }
   requestAnimationFrame(frame);
 }
+// Who made the ready-made model on show, and its licence (data/models.js; the code-drawn ones are our own).
+let creditFor;
+function waveCredit(key) {
+  if (key === creditFor) return;
+  creditFor = key;
+  const m = MODELS[key], a = (href, text) => (href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text));
+  $('#waveCredit').innerHTML = m ? `3D model: ${a(m.source, m.title)} by ${a(m.authorUrl, m.author)}, ${esc(m.site)} · ${a(m.licenceUrl, m.licence)}` : '';
+}
 function drawView(t) {
   if (state.view === 'spectrum') {
     if (state.mode === 'field' && field) {
@@ -608,7 +618,7 @@ function drawView(t) {
       for (const [cls, pos] of [['lab-e', p.e], ['lab-b', p.b], ['lab-go', p.go], ['lab-l', p.l]]) { const el = $(`.field-labels .${cls}`); el.style.transform = `translate(${host.offsetLeft + pos.x}px, ${host.offsetTop + pos.y}px)`; }
       const card = $('#fieldCard');
       card.style.transform = `translate(${host.offsetLeft + host.offsetWidth - card.offsetWidth - 12}px, ${host.offsetTop + 12}px)`;
-    } else wave.draw(t);
+    } else { wave.draw(t); waveCredit(wave.shown); }
   } else if (state.view === 'visible') vis.draw(t);
   else if (state.view === 'blackbody') bb.draw(t);
   else if (state.view === 'air') air?.draw(t);
