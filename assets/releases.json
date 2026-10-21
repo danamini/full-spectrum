@@ -12,7 +12,8 @@
       "items": [
         {"kind": "better", "text": "Jupiter, Neptune, the Earth and the Moon wear real maps made from NASA data (Solar System Scope); the Earth has its clouds, a sheen on the sea and city lights on its night side", "go": "#km-11900"},
         {"kind": "better", "text": "Everest is built from real heights, a block of ground from sea level to the summit with Lhotse and Nuptse beside it, snow and glacier where they lie", "go": "#km-8.25"},
-        {"kind": "better", "text": "The Burj Khalifa is built from its real plan: three wings round a core, stepping back one at a time in a spiral to the spire", "go": "#m-772"}
+        {"kind": "better", "text": "The Burj Khalifa is built from its real plan: three wings round a core, stepping back one at a time in a spiral to the spire", "go": "#m-772"},
+        {"kind": "better", "text": "The wave view says what the wave's height means: not a size but the strength of the electric field, set by brightness rather than wavelength (about 870 volts per metre in full sunlight)", "go": "#thing-fm"}
       ]
     },
     {

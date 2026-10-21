@@ -7,6 +7,7 @@ import { bandAt } from './bands.js';
 import { spectral, VISIBLE } from './colour.js';
 import { pick } from './scale.js';
 import * as fmt from './format.js';
+import { waveHeight } from './notes.js';
 
 const WAVES = 3.25;        // wavelengths across the view
 const SHOWN_HZ = 0.55;     // how fast the wave goes by on screen
@@ -61,6 +62,7 @@ export class WaveView {
     const pxPerλ = W / WAVES;
     const { rgb } = waveColour(λ);
     const colour = `rgb(${rgb.join(' ')})`;
+    const footer = this.footerLines(λ, rect.w - 16), foot = this.foot = rect.y + rect.h - footer.length * 16 - 6; // labels (and the credit) stay above it
 
     // The thing to compare with, behind the wave.
     const obj = pick(physW);
@@ -79,9 +81,9 @@ export class WaveView {
         const lx = ocx + Math.max(spx * 0.3, 14) + 8, top = cy - spx / 2, bot = cy + spx / 2;
         if (spx < rect.h * 1.2) { this.dim(lx, top, lx, bot); }
         ctx.textAlign = 'left';
-        ctx.fillText(label, lx + 8, Math.min(rect.y + rect.h - 10, Math.max(rect.y + 16, cy + A + 34)));
+        ctx.fillText(label, lx + 8, Math.min(foot - 4, Math.max(rect.y + 16, cy + A + 34)));
       } else {
-        const ly = Math.min(rect.y + rect.h - 26, cy + Math.max(A, spx * 0.36) + 22);
+        const ly = Math.min(foot - 20, cy + Math.max(A, spx * 0.36) + 22);
         this.dim(ocx - spx / 2, ly, ocx + spx / 2, ly);
         ctx.fillText(label, ocx, ly + 18);
       }
@@ -131,12 +133,23 @@ export class WaveView {
     ctx.fillText(`one wavelength: ${fmt.length(λ)}`, x0 + crest + pxPerλ / 2, yb - 9);
     ctx.restore();
 
-    // How much it is slowed down.
-    const f = frequency(λ);
+    // How much it is slowed down, and what its height means, at the foot.
     ctx.fillStyle = '#5b6578'; ctx.font = '400 12px "IBM Plex Sans", sans-serif'; ctx.textAlign = 'center';
-    const slow = [`Slowed down ${fmt.sci(f / SHOWN_HZ)} times:`, `it really goes by ${fmt.count(f)} times a second.`];
-    if (ctx.measureText(slow.join(' ')).width < rect.w - 16) ctx.fillText(slow.join(' '), rect.x + rect.w / 2, rect.y + rect.h - 6);
-    else slow.forEach((line, i) => ctx.fillText(line, rect.x + rect.w / 2, rect.y + rect.h - 22 + i * 16));
+    footer.forEach((line, i) => ctx.fillText(line, rect.x + rect.w / 2, rect.y + rect.h - 6 - (footer.length - 1 - i) * 16));
+  }
+
+  // The lines at the foot of the wave picture, wrapped to the width: how much the wave is slowed down, and that
+  // its height is not a size.
+  footerLines(λ, width) {
+    const { ctx } = this, f = frequency(λ);
+    ctx.font = '400 12px "IBM Plex Sans", sans-serif';
+    const fit = text => {
+      if (ctx.measureText(text).width < width) return [text];
+      const words = text.split(' '), lines = [''];
+      for (const w of words) { const t = lines.at(-1) ? `${lines.at(-1)} ${w}` : w; if (ctx.measureText(t).width < width) lines[lines.length - 1] = t; else lines.push(w); }
+      return lines;
+    };
+    return [...fit(`Slowed down ${fmt.sci(f / SHOWN_HZ)} times: it really goes by ${fmt.count(f)} times a second.`), ...fit(waveHeight().line)];
   }
 
   drawPhotons(t) {

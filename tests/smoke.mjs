@@ -119,6 +119,7 @@ await test('wave, 3D fields and photons', async page => {
       const energy = await page.evaluate(() => document.querySelector('#inEnergy').value);
       expect(cards.length === 4 && cards[0] === energy && cards[1] === 'Too weak alone', `photon cards: ${cards} (readout ${energy})`);
     }
+    if (mode === 'wave') expect(await page.locator('#details h3', { hasText: "The wave's height" }).count() === 1, 'no note on what the wave\'s height means');
   }
   await page.click('.seg [data-mode="field"]'); await wait(page, 800);
   await page.click('[data-polar="circular"]'); await wait(page, 800);

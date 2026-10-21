@@ -71,3 +71,13 @@ export function photonFacts(metres, effect, visible) {
     visible ? card('Your eye', 'About 100', 'photons in a flash are enough for a dark-adapted eye to notice it; only 5 to 14 of them are caught by rods (Hecht, Shlaer and Pirenne, 1942).') : '',
   ].join('');
 }
+
+// What the wave's height means: not a size but the strength of the electric field, which is set by how bright
+// the light is, not by its wavelength. For the line under the wave picture and the panel.
+export function waveHeight() {
+  const sun = P.fields(SUNLIGHT);
+  return {
+    line: `Its height is not a size: it is the strength of the electric field, set by brightness, not wavelength (about ${volts(sun.E)} at its peak in full sunlight).`,
+    panel: `<h3>The wave's height</h3><p>The wave is drawn to scale along its length, but not in height, because its height is not a length at all. Light does not wiggle through space like a rope: the curve is a graph of the electric field along the beam, and its height is how strong that field is, in volts per metre.</p><p>That strength is set by how bright the light is, not by its wavelength: a dim and a bright beam of the same colour have the same wavelength. In full sunlight the field peaks near ${volts(sun.E)}; a metre from a phone's aerial it is a few volts per metre; from a distant radio station, around a thousandth of a volt per metre. So every wave here is drawn the same height, just to be seen.</p>`,
+  };
+}

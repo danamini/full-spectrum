@@ -14,7 +14,7 @@ import { JOURNEY } from './journey.js';
 import { ANIMALS } from '../data/cones.js';
 import { SOLAR } from '../data/solar.js';
 import * as fmt from './format.js';
-import { fieldNotes, photonNotes, fieldCard, photonFacts } from './notes.js';
+import { fieldNotes, photonNotes, fieldCard, photonFacts, waveHeight } from './notes.js';
 import { MODELS } from '../data/models.js';
 import { EXAMPLE_PICTURES } from '../data/examples.js';
 import { MOLECULES } from '../data/molecules.js';
@@ -218,6 +218,7 @@ function details() {
     if (band.links.length) html += `<ul class="links">${band.links.map(([label, hash]) => `<li><a href="${moleculeViewer(hash)}" target="_blank" rel="noopener">${esc(label)}</a> <small>Molecule Viewer</small></li>`).join('')}</ul>`;
     const near = THINGS.filter(x => x.m <= band.from && x.m > band.to);
     if (near.length) html += `<h3>In this band</h3><ul class="things">${near.map(x => `<li><a href="#thing-${x.key}"${x === t ? ' aria-current="true"' : ''}>${esc(x.name)}<small>${fmt.length(x.m)}</small></a></li>`).join('')}</ul>`;
+    if (state.mode === 'wave') html += waveHeight().panel;
   }
   if (tone.on) { const o = octaveDown(P.frequency(m)); html += `<p class="note">Sound: ${Math.round(o.hz)} Hz, the frequency halved ${o.octaves} times.</p>`; }
   const d = $('#details');
@@ -656,7 +657,12 @@ function drawView(t) {
       for (const [cls, pos] of [['lab-e', p.e], ['lab-b', p.b], ['lab-go', p.go], ['lab-l', p.l]]) { const el = $(`.field-labels .${cls}`); el.style.transform = `translate(${host.offsetLeft + pos.x}px, ${host.offsetTop + pos.y}px)`; }
       const card = $('#fieldCard');
       card.style.transform = `translate(${host.offsetLeft + host.offsetWidth - card.offsetWidth - 12}px, ${host.offsetTop + 12}px)`;
-    } else { wave.draw(t); waveCredit(wave.shown); if (state.mode === 'photons') photonCards(); }
+    } else {
+      wave.draw(t); waveCredit(wave.shown);
+      const top = `${Math.round(wave.foot ?? 0) - 6}px`, credit = $('#waveCredit'); // just above the lines at the foot
+      if (credit.style.top !== top) credit.style.top = top;
+      if (state.mode === 'photons') photonCards();
+    }
   } else if (state.view === 'visible') vis.draw(t);
   else if (state.view === 'blackbody') bb.draw(t);
   else if (state.view === 'air') air?.draw(t);
