@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const N = 160, LENGTH = 12, WAVES = 3, AMP = 1.6;
+export const SHOWN_HZ = 0.45; // cycles a second on screen
 
 export class FieldView {
   constructor(host) {
@@ -31,6 +32,11 @@ export class FieldView {
     const head = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.45, 16), new THREE.MeshBasicMaterial({ color: 0x8b96aa }));
     head.rotation.z = -Math.PI / 2; head.position.x = LENGTH / 2 + 0.9;
     this.scene.add(head);
+
+    // One wavelength, measured off under the wave like a dimension line.
+    const y = -AMP - 0.6, x0 = -LENGTH / WAVES / 2, x1 = LENGTH / WAVES / 2, t = 0.18;
+    const dim = [[x0, y, 0], [x1, y, 0], [x0, y - t, 0], [x0, y + t, 0], [x1, y - t, 0], [x1, y + t, 0]].map(p => new THREE.Vector3(...p));
+    this.scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(dim), new THREE.LineBasicMaterial({ color: 0xf2b45a, transparent: true, opacity: 0.8 })));
 
     this.e = this.field(0xffffff);
     this.b = this.field(0xe8edf5);
@@ -65,7 +71,7 @@ export class FieldView {
   }
 
   draw(t) {
-    const phase = t * 2 * Math.PI * 0.45;
+    const phase = t * 2 * Math.PI * SHOWN_HZ;
     const circular = this.polar === 'circular';
     const ec = this.e.curve.geometry.attributes.position.array, eb = this.e.comb.geometry.attributes.position.array;
     const bc = this.b.curve.geometry.attributes.position.array, bb = this.b.comb.geometry.attributes.position.array;
@@ -88,6 +94,6 @@ export class FieldView {
   labelPositions() {
     const { width, height } = this.host.getBoundingClientRect();
     const at = v => { const p = v.clone().project(this.camera); return { x: (p.x + 1) / 2 * width, y: (1 - p.y) / 2 * height }; };
-    return { e: at(new THREE.Vector3(-LENGTH / 2 + 0.6, AMP + 0.5, 0)), b: at(new THREE.Vector3(-LENGTH / 2 + 0.6, 0, AMP * 0.8 + 0.4)), go: at(new THREE.Vector3(LENGTH / 2 + 1.3, 0.4, 0)) };
+    return { e: at(new THREE.Vector3(-LENGTH / 2 + 0.6, AMP + 0.5, 0)), b: at(new THREE.Vector3(-LENGTH / 2 + 0.6, 0, AMP * 0.8 + 0.4)), go: at(new THREE.Vector3(LENGTH / 2 + 1.3, 0.4, 0)), l: at(new THREE.Vector3(0, -AMP - 1.25, 0)) };
   }
 }

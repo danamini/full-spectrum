@@ -107,6 +107,8 @@ await test('wave, 3D fields and photons', async page => {
   await page.click('.seg [data-mode="field"]'); await wait(page, 800);
   await page.click('[data-polar="circular"]'); await wait(page, 800);
   expect(await page.locator('#fieldHost canvas').count() === 1, 'no 3D canvas');
+  const words = await page.evaluate(() => [document.querySelector('#fieldCard').textContent, document.querySelector('#fieldLength').textContent, document.querySelector('#details h2').textContent]);
+  expect(words[0].includes('Circular polarisation') && words[1].endsWith(' m') && words[2] === 'Fields in 3D', `3D view words: ${words.join(' / ')}`);
 });
 
 await test('visible light views', async page => {
@@ -136,6 +138,10 @@ await test('through the air and the sky', async page => {
   await go(page, 'air', 2600);
   expect((await app(page)).view === 'air', 'air');
   await page.hover('#airCanvas', { position: { x: 300, y: 330 } });
+  expect(await page.locator('#details h3').count() > 2, 'air panel has no sections');
+  await page.click('#details [data-scope="ALMA"]'); await wait(page, 1500);
+  const scope = await page.evaluate(() => [document.querySelector('#details .scope .known')?.textContent, spectrum.ribbon.metres]);
+  expect(scope[0]?.startsWith('ALMA') && scope[1] < 3.6e-3 && scope[1] > 0.32e-3, `ALMA card and tuning: ${scope}`);
   for (const k of ['milkyway', 'sun', 'crab']) {
     await go(page, `sky-${k}`, 2600);
     expect((await app(page)).view === 'sky', `sky-${k}`);

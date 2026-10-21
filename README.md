@@ -27,8 +27,9 @@ what it does to matter.
   mistaken for it.
 - **The wave at a scale you can feel.** The light at the cursor as a travelling wave, beside the real object
   nearest its size: the Earth–Moon distance, Everest, a bus, a coin, a red blood cell, a flu virus, a water
-  molecule, a proton. Or as electric and magnetic fields in 3D (linear or circular polarisation), or as photons:
-  how many are in a metre of a 1 mW beam, and what one of them can do.
+  molecule, a proton. Or as electric and magnetic fields in 3D (linear or circular polarisation), labelled and
+  measured, with how strong the fields are in sunlight; or as photons: how many are in a metre of a 1 mW beam,
+  and what one of them can do.
 - **Forty real things at their wavelengths,** from the Schumann resonance to the 1.4 PeV photon LHAASO caught,
   by way of FM radio, the hydrogen line, microwave ovens, the cosmic microwave background, your body's glow,
   sodium lamps, sunburn, EUV chip lithography and PET scans.
@@ -37,11 +38,14 @@ what it does to matter.
   spectrum above the air and at the ground against a 5772 K blackbody; human cone sensitivities and
   other animals' (bees, dogs, goldfish, mantis shrimp, pit vipers).
 - **Hot things.** Planck's law from the cosmic microwave background (2.7 K) to the Sun's corona, with the
-  peak, the colour it glows and the curve laid over the dial.
-- **Through the air.** What reaches the ground across the whole spectrum, the named windows, and which
-  telescopes sit on mountains and which have to fly.
+  peak, the colour it glows, how its power splits between infrared, visible, ultraviolet and X-rays, how much
+  it gives out, and the curve laid over the dial.
+- **Through the air.** What reaches the ground across the whole spectrum, what absorbs each stretch and why
+  it matters for life and climate, the named windows, and twelve telescopes from FAST to LHAASO: where each
+  is, what it is like, what it found, and why it has to be on a mountain or in space.
 - **The sky in every light.** The Milky Way, the Sun and the Crab Nebula photographed across the spectrum;
-  the picture follows the dial.
+  the picture follows the dial, and each one comes with what you are seeing, what its colours mean and where
+  it was taken from.
 - **Links to [Molecule Viewer](https://moleculeviewer.org)** for the molecules and elements each band acts on.
 - **A journey** from the longest waves to the shortest, a tour, Surprise me, sound (each frequency shifted
   down by octaves until you can hear it), picture export, keyboard throughout (`?`), a phone layout, and an

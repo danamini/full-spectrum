@@ -23,7 +23,13 @@
   <div class="views">
     <canvas id="waveCanvas" class="view-canvas" data-for="spectrum"></canvas>
     <div id="fieldHost" class="view-host" data-for="field" aria-label="3D view of the electric and magnetic fields. Drag to turn."></div>
-    <div class="field-labels" data-for="field" aria-hidden="true"><span class="lab-e">electric field</span><span class="lab-b">magnetic field</span><span class="lab-go">travel</span></div>
+    <div class="field-labels" data-for="field" aria-hidden="true">
+      <span class="lab-e"><b>Electric field</b><small>pushes on charges</small></span>
+      <span class="lab-b"><b>Magnetic field</b><small>at right angles, in step</small></span>
+      <span class="lab-go"><b>Travel</b><small>at the speed of light</small></span>
+      <span class="lab-l"><b>One wavelength</b><small id="fieldLength"></small></span>
+      <div class="field-card glass" id="fieldCard"></div>
+    </div>
     <canvas id="visCanvas" class="view-canvas" data-for="visible"></canvas>
     <canvas id="bbCanvas" class="view-canvas" data-for="blackbody"></canvas>
     <canvas id="airCanvas" class="view-canvas" data-for="air"></canvas>

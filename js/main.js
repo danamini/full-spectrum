@@ -8,12 +8,13 @@ import { moleculeViewer, siblingApp } from './links.js';
 import { Ribbon } from './ribbon.js';
 import { WaveView, waveColour } from './wave.js';
 import { VisibleView, VIEWS as VIS_VIEWS } from './visible.js';
-import { BlackbodyView, PRESETS, T_MIN, T_MAX, glowText, ribbonOverlay as bbOverlay } from './blackbody.js';
+import { BlackbodyView, PRESETS, T_MIN, T_MAX, glowText, shares as bbShares, ribbonOverlay as bbOverlay } from './blackbody.js';
 import { Tone, octaveDown } from './sound.js';
 import { JOURNEY } from './journey.js';
 import { ANIMALS } from '../data/cones.js';
 import { SOLAR } from '../data/solar.js';
 import * as fmt from './format.js';
+import { fieldNotes, photonNotes, fieldCard } from './notes.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -26,6 +27,7 @@ const state = {
   vis: 'prism',
   kelvin: 5772,
   sky: null,
+  scope: null,        // the telescope chosen in Through the air
   thing: null,        // the marked thing, while the cursor is on it
   tour: null,
   journey: null,
@@ -37,15 +39,23 @@ const ribbon = new Ribbon($('#ribbon'), { onChange: changed, onPick: t => go(`th
 const wave = new WaveView($('#waveCanvas'));
 const vis = new VisibleView($('#visCanvas'));
 const bb = new BlackbodyView($('#bbCanvas'));
-let field = null, air = null, sky = null, airMod = null;
+let field = null, air = null, sky = null, airMod = null, fieldMod = null;
 const tone = new Tone();
 
 async function getField() {
-  if (!field) { const { FieldView } = await import('./field3d.js'); field = new FieldView($('#fieldHost')); field.setColour(waveColour(ribbon.metres).rgb); }
+  if (!field) { fieldMod = await import('./field3d.js'); field = new fieldMod.FieldView($('#fieldHost')); field.setColour(waveColour(ribbon.metres).rgb); updateFieldCard(); }
   return field;
 }
+// The words on the 3D view: the wavelength under its bracket, and the card in the corner.
+function updateFieldCard() {
+  if (!field) return;
+  const m = ribbon.metres;
+  $('#fieldCard').innerHTML = fieldCard(m, field.polar, fieldMod.SHOWN_HZ);
+  $('#fieldLength').textContent = fmt.length(m);
+  $('.field-labels').style.setProperty('--field-e', css(waveColour(m).rgb));
+}
 async function getAir() {
-  if (!air) { airMod = await import('./atmosphere.js'); air = new airMod.AirView($('#airCanvas')); layout(); }
+  if (!air) { airMod = await import('./atmosphere.js'); air = new airMod.AirView($('#airCanvas')); layout(); detailsKey = ''; details(); }
   return air;
 }
 async function getSky() {
@@ -86,6 +96,7 @@ function changed(metres) {
   if (air) air.metres = metres;
   sky?.set(metres);
   field?.setColour(waveColour(metres).rgb);
+  if (state.mode === 'field') updateFieldCard();
   tone.set(metres);
   readout(metres);
   details();
@@ -132,27 +143,36 @@ for (const [k, el] of Object.entries(inputs)) {
 }
 
 // ---------------------------------------------------------------- details panel
-let detailsKey = '';
+let detailsKey = '', detailsNumbers = '';
 function details() {
   const m = ribbon.metres, band = bandAt(m), sub = subAt(m), ev = P.photonEnergyEV(m);
   const v = state.view;
-  const key = [v, state.vis, band.key, state.thing?.key, v === 'blackbody' ? Math.round(state.kelvin) : '', effectAt(ev).ev, tone.on ? octaveDown(P.frequency(m)).octaves : '', state.sky?.key, sky?.current?.file, state.mode].join('|');
-  if (key === detailsKey) return;
-  detailsKey = key;
+  const key = [v, v === 'air' && airMod ? `${airMod.absorberAt(m).title}|${airMod.windowAt(m)?.name}|${state.scope?.name}|${airCovering(m).map(t => t.name)}` : '', state.vis, band.key, state.thing?.key, v === 'blackbody' ? Math.round(state.kelvin) : '', effectAt(ev).ev, tone.on ? octaveDown(P.frequency(m)).octaves : '', state.sky?.key, sky?.current?.file, state.mode, field?.polar].join('|');
+  // The fields and photons notes quote numbers for the exact wavelength; those change without moving the reader.
+  const numbers = (v === 'spectrum' && state.mode !== 'wave') || v === 'air' ? fmt.length(m) : '';
+  if (key + numbers === detailsKey + detailsNumbers) return;
+  const keepScroll = key === detailsKey;
+  detailsKey = key; detailsNumbers = numbers;
   let html = '';
   if (v === 'visible') {
     const info = VIS_VIEWS[state.vis];
     html += `<h2>${esc(info.name)}</h2><p>${esc(info.blurb)}</p>`;
+    for (const [h, t] of info.more ?? []) html += `<h3>${esc(h)}</h3><p>${esc(t)}</p>`;
     if (state.vis === 'lines') html += `<h3>In Molecule Viewer</h3><ul class="links">${[['H', 'Hydrogen'], ['He', 'Helium'], ['Na', 'Sodium'], ['Ne', 'Neon'], ['Hg', 'Mercury']].map(([s, n]) => `<li><a href="${moleculeViewer(`element-${s}`)}" target="_blank" rel="noopener">${n}</a></li>`).join('')}</ul><p class="note">Hover a line to read its wavelength.</p>`;
     if (state.vis === 'eyes') html += ANIMALS.map(a => `<h3>${esc(a.animal)}</h3><p>${esc(a.note)}</p>`).join('') + `<h3>In Molecule Viewer</h3><ul class="links"><li><a href="${moleculeViewer('retinal')}" target="_blank" rel="noopener">Retinal, the molecule in every cone</a></li></ul>`;
     if (state.vis === 'sunlight') html += sunShares();
   } else if (v === 'blackbody') {
     const k = state.kelvin, pk = P.wienPeak(k), preset = PRESETS.find(p => Math.abs(Math.log(p.k / k)) < 0.01);
     html += `<h2>${preset ? esc(preset.name) : 'A blackbody'}</h2><p class="big">${fmt.kelvin(k)} · peak ${fmt.length(pk)} (${esc(bandAt(pk).name.toLowerCase())})</p><p>${esc(glowText(k))}</p>`;
+    if (preset?.about) html += `<p>${esc(preset.about)}</p>`;
+    const sh = bbShares(k), pct = x => (x * 100 >= 99.95 ? 'all' : x * 100 < 0.01 ? '<0.01%' : `${fmt.sig(x * 100, 2)}%`);
+    html += `<h3>Where its power goes</h3><ul class="shares">${[['Infrared and longer', sh.infrared], ['Visible', sh.visible], ['Ultraviolet', sh.ultraviolet], ['X-rays and shorter', sh.xray]].map(([n, x]) => `<li><span>${n}</span><span class="bar" style="--w:${(x * 100).toFixed(2)}%"></span><b>${pct(x)}</b></li>`).join('')}</ul>`;
+    html += `<h3>How much</h3><p>Each square metre of its surface gives out ${watts(P.exitance(k))}. Double the temperature and it gives out 16 times as much (the Stefan–Boltzmann law): that is why a little more heat makes a filament so much brighter.</p>`;
+    html += `<h3>One photon at the peak</h3><p>${fmt.energy(P.photonEnergyEV(pk))}. ${esc(effectAt(P.photonEnergyEV(pk)).text)}</p>`;
     html += `<p>Everything glows with a spectrum set by its temperature. Hotter things glow brighter at every wavelength, and their peak moves to shorter waves: double the temperature, halve the peak's wavelength (Wien's law). The orange line on the spectrum below is this curve.</p>`;
     html += `<p class="note">The curves are Planck's law for a perfect absorber and emitter. Real surfaces give out somewhat less, but the shape and the peak hold.</p>`;
-  } else if (v === 'air') {
-    html += `<h2>Through the air</h2><p>The atmosphere is clear in two main windows: visible light, with a little infrared and ultraviolet either side, and radio from about a centimetre to about ten metres. Ozone soaks up ultraviolet, oxygen and nitrogen stop X-rays and gamma rays, water vapour and carbon dioxide absorb much of the infrared, and the ionosphere turns back the longest radio waves.</p><p>So radio and optical telescopes can sit on mountains; almost everything else has to go to space.</p><p class="note">Hover the chart for the windows and telescopes. The shaded curtain on the spectrum below is the air's opacity.</p>`;
+  } else if (v === 'air' && airMod) {
+    html += airDetails(m);
   } else if (v === 'sky' && state.sky) {
     const o = state.sky, cur = sky?.current;
     html += `<h2>${esc(o.name)}</h2><p>${esc(o.note ?? '')}</p>`;
@@ -167,6 +187,8 @@ function details() {
   } else {
     const t = state.thing;
     if (t) html += `<div class="thing"><p class="known">${esc(t.known)}</p><p>${esc(t.why)}</p></div>`;
+    if (state.mode === 'field') html += `<section class="mode-notes">${fieldNotes(m, field?.polar ?? 'linear')}</section>`;
+    if (state.mode === 'photons') html += `<section class="mode-notes">${photonNotes(m)}</section>`;
     const range = `${fmt.length(band.from)} to ${fmt.length(band.to)}`;
     html += `<h2>${esc(band.name)}${sub && band.key !== 'visible' ? ` <small>${esc(sub.long ?? sub.name)}</small>` : ''}</h2>`;
     html += `<p class="range">${band.key === 'gamma' ? `shorter than ${fmt.length(band.from)}` : band.key === 'radio' ? `longer than ${fmt.length(band.to)}` : range}</p>`;
@@ -180,9 +202,42 @@ function details() {
   }
   if (tone.on) { const o = octaveDown(P.frequency(m)); html += `<p class="note">Sound: ${Math.round(o.hz)} Hz, the frequency halved ${o.octaves} times.</p>`; }
   const d = $('#details');
+  const top = d.scrollTop;
   d.innerHTML = html;
-  d.scrollTop = 0;
+  d.scrollTop = keepScroll ? top : 0;
 }
+
+// Through the air: what happens at the cursor, the chosen telescope, every telescope, and why it matters.
+// A range in the units that read best there: frequency for radio, energy for X-rays and gamma rays.
+function rangeText(a, b) {
+  const long = Math.max(a, b), short = Math.min(a, b);
+  if (short >= 1e-3) return `${fmt.frequency(P.frequency(long))} to ${fmt.frequency(P.frequency(short))}`;
+  if (long <= 2e-8) return `${fmt.energy(P.photonEnergyEV(long))} to ${fmt.energy(P.photonEnergyEV(short))}`;
+  return `${fmt.length(long)} to ${fmt.length(short)}`;
+}
+const airCovering = m => (airMod ? airMod.TELESCOPES.filter(t => m <= t.from && m >= t.to) : []);
+function airDetails(m) {
+  const { absorberAt, windowAt, transmission, TELESCOPES } = airMod;
+  const pct = transmission(m) * 100, a = absorberAt(m), w = windowAt(m), here = airCovering(m), sc = state.scope;
+  const reach = pct >= 99.5 ? 'almost all of it reaches the ground' : pct < 0.5 ? 'none of it reaches the ground' : `about ${fmt.sig(pct, 2)}% reaches the ground`;
+  const where = t => (t.where === 'space' ? 'in space' : 'on the ground');
+  let html = `<h2>Through the air</h2><p class="big">At ${fmt.length(m)}, ${reach}.</p>`;
+  if (w) html += `<p>Inside the <strong>${esc(w.name)}</strong>. ${esc(w.note)}</p>`;
+  html += `<h3>${esc(a.title)}</h3><p>${esc(a.text)}</p>`;
+  if (sc) {
+    html += `<div class="thing scope"><p class="known">${esc(sc.name)} <small>${where(sc)}</small></p><p class="range">${rangeText(sc.from, sc.to)}</p>`;
+    html += `<h3>Where</h3><p>${esc(sc.place)}</p><h3>The telescope</h3><p>${esc(sc.size)} ${esc(sc.years)}</p><h3>What it does</h3><p>${esc(sc.story)}</p><h3>Why there</h3><p>${esc(sc.why)}</p></div>`;
+  }
+  html += `<h3>Telescopes</h3><ul class="things pictures scopes">${TELESCOPES.map(t => `<li><button type="button" data-scope="${esc(t.name)}"${t === sc ? ' aria-current="true"' : ''}><span>${esc(t.name)}<small>${here.includes(t) ? 'works here · ' : ''}${where(t)}</small></span><span class="short">${esc(t.note)}</span></button></li>`).join('')}</ul>`;
+  html += `<h3>Why it matters</h3><p>The air is clear in two wide windows: visible light, with a little infrared and ultraviolet either side, and radio from about a centimetre to a few tens of metres. Everything else is absorbed somewhere on the way down, and that shapes life, climate and astronomy.</p>`;
+  html += `<p><strong>Life:</strong> ozone and oxygen take out the ultraviolet that breaks DNA. The visible window is where the Sun is brightest, and it is the light eyes evolved to see and plants to use.</p>`;
+  html += `<p><strong>Climate:</strong> sunlight comes in through the visible window; the Earth's heat goes out as infrared, much of it through the window near 10 µm. Water vapour and carbon dioxide absorb the infrared either side and send some back down. That greenhouse effect keeps the Earth about 33 °C warmer than it would otherwise be, and more carbon dioxide strengthens it.</p>`;
+  html += `<p><strong>Astronomy:</strong> radio and visible telescopes can stay on the ground, on high, dry mountains away from town lights. For millimetre and infrared waves they climb higher and drier, or fly. For far infrared, ultraviolet, X-rays and most gamma rays they must go to space, except at the very highest energies, where the air becomes the detector.</p>`;
+  html += `<p class="note">Click a telescope, here or on the chart, to read about it. Hover the chart for the named windows. The shaded curtain on the spectrum below is the air's opacity.</p>`;
+  return html;
+}
+
+const watts = w => w < 1e3 ? `${fmt.sig(w, 2)} watts` : w < 1e6 ? `${fmt.sig(w / 1e3, 2)} kilowatts` : w < 1e9 ? `${fmt.sig(w / 1e6, 2)} megawatts` : `${fmt.sci(w)} watts`;
 
 // Shares of the Sun's energy above the air, by band, from the ASTM G173 spectrum (280 nm–4 µm).
 const SUN_SHARES = (() => {
@@ -196,7 +251,16 @@ const sunShares = () => `<p>${SUN_SHARES}</p>`;
 $('#details').addEventListener('click', e => {
   const b = e.target.closest('[data-picture]');
   if (b && state.sky) ribbon.tune(state.sky.images[+b.dataset.picture].metres, ribbon.span, 900);
+  const s = e.target.closest('[data-scope]');
+  if (s && airMod) pickScope(airMod.TELESCOPES.find(t => t.name === s.dataset.scope));
 });
+// Choosing a telescope shows its card and tunes the dial to the middle of its range.
+function pickScope(t) {
+  state.scope = state.scope === t ? null : t;
+  if (air) { air.selected = state.scope?.name ?? null; }
+  details();
+  if (state.scope) ribbon.tune(Math.sqrt(t.from * t.to), Math.max(ribbon.span, Math.log10(t.from / t.to) * 1.3 + 1), 900);
+}
 
 // ---------------------------------------------------------------- switching views
 function setView(v) {
@@ -213,7 +277,7 @@ function setMode(mode) {
   body.dataset.mode = mode;
   wave.mode = mode;
   $$('[data-mode]').forEach(b => b.matches('button') && b.setAttribute('aria-pressed', b.dataset.mode === mode ? 'true' : 'false'));
-  if (mode === 'field') getField().then(layout);
+  if (mode === 'field') getField().then(() => { updateFieldCard(); layout(); });
   details();
 }
 function setVis(v) {
@@ -237,6 +301,7 @@ function showSpectrumIfNeeded() { if (state.view !== 'spectrum') { setView('spec
 $$('.seg [data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 $$('[data-polar]').forEach(b => b.addEventListener('click', async () => {
   (await getField()).polar = b.dataset.polar;
+  updateFieldCard(); details();
   $$('[data-polar]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
 }));
 $$('[data-vis]').forEach(b => b.addEventListener('click', () => go(b.dataset.vis)));
@@ -435,6 +500,11 @@ let toastTimer = 0;
 function toast(text) { const t = $('#toast'); t.textContent = text; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 1800); }
 
 const tip = $('#tip');
+$('#airCanvas').addEventListener('click', e => {
+  const h = air?.hitAt(e.offsetX, e.offsetY);
+  if (h?.scope) pickScope(h.scope);
+  else if (h?.window) ribbon.tune(Math.sqrt(h.window.from * h.window.to), ribbon.span, 900);
+});
 for (const [sel, view] of [['#visCanvas', () => vis], ['#airCanvas', () => air]]) {
   $(sel).addEventListener('pointermove', e => {
     const h = view()?.hitAt(e.offsetX, e.offsetY);
@@ -494,7 +564,10 @@ function drawView(t) {
     if (state.mode === 'field' && field) {
       field.draw(t);
       const p = field.labelPositions();
-      for (const [cls, pos] of [['lab-e', p.e], ['lab-b', p.b], ['lab-go', p.go]]) { const el = $(`.field-labels .${cls}`); el.style.transform = `translate(${$('#fieldHost').offsetLeft + pos.x}px, ${$('#fieldHost').offsetTop + pos.y}px)`; }
+      const host = $('#fieldHost');
+      for (const [cls, pos] of [['lab-e', p.e], ['lab-b', p.b], ['lab-go', p.go], ['lab-l', p.l]]) { const el = $(`.field-labels .${cls}`); el.style.transform = `translate(${host.offsetLeft + pos.x}px, ${host.offsetTop + pos.y}px)`; }
+      const card = $('#fieldCard');
+      card.style.transform = `translate(${host.offsetLeft + host.offsetWidth - card.offsetWidth - 12}px, ${host.offsetTop + 12}px)`;
     } else wave.draw(t);
   } else if (state.view === 'visible') vis.draw(t);
   else if (state.view === 'blackbody') bb.draw(t);

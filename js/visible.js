@@ -7,11 +7,33 @@ import { SOLAR } from '../data/solar.js';
 import { CONES, ANIMALS } from '../data/cones.js';
 import { BANDS } from './bands.js';
 
+// `more` is extra sections for the details panel: [heading, text].
 export const VIEWS = {
-  prism: { name: 'Prism', blurb: 'White light into a dense flint glass prism (Schott SF11), ray-traced with the glass\'s measured dispersion. Shorter waves bend more. The faint dashed rays past each end are the infrared Herschel found with a thermometer in 1800 and the ultraviolet Ritter found with silver chloride in 1801.' },
-  lines: { name: 'Atoms\' lines', blurb: 'Each element\'s electrons can only jump between fixed levels, so a glowing gas gives out a few exact colours, a barcode unique to the element. Sunlight has the same barcodes in reverse: dark lines where cooler gas in the Sun\'s atmosphere absorbs. Helium was found in the Sun\'s light in 1868, before anyone found it on Earth.' },
-  sunlight: { name: 'Sunlight', blurb: 'The Sun\'s spectrum above the atmosphere and at the ground (with the Sun 48° from overhead), against a 5772 K blackbody. Ozone takes the ultraviolet; oxygen and water vapour bite chunks out of the infrared.' },
-  eyes: { name: 'Who sees what', blurb: 'Your three cone types and their sensitivity (Stockman and Sharpe). Colour is the brain comparing them. Other animals cut the spectrum differently: bees see ultraviolet but not red; dogs have two cone types; snakes feel infrared as heat.' },
+  prism: { name: 'Prism', blurb: 'White light into a dense flint glass prism (Schott SF11), ray-traced with the glass\'s measured dispersion. Shorter waves bend more. The faint dashed rays past each end are the infrared Herschel found with a thermometer in 1800 and the ultraviolet Ritter found with silver chloride in 1801.',
+    more: [
+      ['Why shorter waves bend more', `Light slows down in glass: it shakes the glass's electrons, and they send out light of their own that combines with it. Those electrons respond most strongly to ultraviolet, so the nearer a colour is to ultraviolet the more it is slowed, and the more it bends at each surface. In SF11, violet at 400 nm goes at ${(1 / nSF11(400)).toFixed(3)} of its speed in a vacuum and red at 700 nm at ${(1 / nSF11(700)).toFixed(3)}. That small difference fans the colours out.`],
+      ['Newton\'s two prisms', 'In the 1660s Isaac Newton split sunlight with a prism, then sent one colour on its own through a second prism. It bent again but stayed the same colour. So the colours were in the white light all along; the glass only sorts them.'],
+      ['Rainbows', 'Raindrops do the same. Sunlight bends going into each drop, reflects off the back and bends again coming out. Red leaves at about 42° from the point directly opposite the Sun and violet at about 40°, so each colour makes its own circle in the sky.'],
+    ] },
+  lines: { name: 'Atoms\' lines', blurb: 'Each element\'s electrons can only jump between fixed levels, so a glowing gas gives out a few exact colours, a barcode unique to the element. Sunlight has the same barcodes in reverse: dark lines where cooler gas in the Sun\'s atmosphere absorbs. Helium was found in the Sun\'s light in 1868, before anyone found it on Earth.',
+    more: [
+      ['Why exact colours', 'An electron in an atom can only have certain energies. When it drops from one level to a lower one it gives out a photon carrying exactly the difference, and so exactly one wavelength. Hydrogen\'s red line at 656 nm is an electron dropping from the third level to the second; its other visible lines end on the second level too.'],
+      ['Sodium\'s yellow', 'Two lines very close together, at 589.0 and 589.6 nm. Old orange street lamps were glowing sodium vapour, and nearly all their light was in these two lines, which is why everything under them looked drained of colour.'],
+      ['Reading the stars', 'In 1859 Gustav Kirchhoff and Robert Bunsen showed that each element has its own lines, and that the Sun\'s dark lines match elements on Earth. Since then spectra have told astronomers what stars are made of, how hot they are, and, from how far the lines are shifted, how fast they are moving towards or away from us.'],
+    ] },
+  sunlight: { name: 'Sunlight', blurb: 'The Sun\'s spectrum above the atmosphere and at the ground (with the Sun 48° from overhead), against a 5772 K blackbody. Ozone takes the ultraviolet; oxygen and water vapour bite chunks out of the infrared.',
+    more: [
+      ['Where does it peak?', 'Measured per nanometre of wavelength, sunlight above the air peaks in blue-green, near 500 nm. Measured per unit of frequency, the same light peaks in the near infrared, near 880 nm. Neither is the real peak: it depends how you slice the spectrum, so "the Sun is green" is not quite right either.'],
+      ['The dark lines', 'In 1814 Joseph von Fraunhofer mapped hundreds of dark lines in sunlight and lettered the strongest. D is sodium and C is hydrogen, in the Sun\'s atmosphere; A and B are oxygen in our own air, which the light crosses at the end of its journey.'],
+      ['At the ground', 'On the way down, ozone takes the ultraviolet, air molecules scatter blue across the sky, and water vapour and oxygen absorb bands of infrared. In full sun about 1,000 watts reach each square metre of ground, about three-quarters of what arrives above the air.'],
+    ] },
+  eyes: { name: 'Who sees what', blurb: 'Your three cone types and their sensitivity (Stockman and Sharpe). Colour is the brain comparing them. Other animals cut the spectrum differently: bees see ultraviolet but not red; dogs have two cone types; snakes feel infrared as heat.',
+    more: [
+      ['Three cones', 'Your cones respond most at about 440 nm (S), 540 nm (M) and 570 nm (L), and their curves overlap heavily. Pure yellow light at 580 nm and a mix of red and green light stir the cones in the same proportions, so they look the same. That is how a screen makes nearly every colour from three.'],
+      ['Rods, for the dark', 'In dim light a fourth kind of cell takes over, the rods. They are most sensitive near 500 nm and cannot tell colours apart, which is why a moonlit garden looks grey.'],
+      ['Colour blindness', 'About 1 in 12 men and 1 in 200 women of northern European descent have red-green colour blindness, usually because the M or L cones are missing or shifted towards each other.'],
+      ['Why 380 to 750 nm?', 'Shorter waves are mostly blocked by the eye\'s lens, which protects the retina; people whose lens has been removed can see a little way into the ultraviolet. Longer waves carry too little energy per photon to change the shape of retinal, the molecule that starts sight.'],
+    ] },
 };
 
 const VMIN = 380, VMAX = 750;

@@ -2,22 +2,51 @@
 import { planck, wienPeak } from './physics.js';
 import { blackbody as glow, spectral, css, VISIBLE } from './colour.js';
 import * as fmt from './format.js';
+import { byKey } from './bands.js';
 
 export const T_MIN = 2.7255, T_MAX = 1e7;
 
 export const PRESETS = [
-  { key: 'cmb', name: 'The cosmic microwave background', k: 2.7255 },
-  { key: 'nitrogen', name: 'Liquid nitrogen', k: 77 },
-  { key: 'you', name: 'You', k: 310 },
-  { key: 'oven', name: 'A hot oven (200 °C)', k: 473 },
-  { key: 'red-hot', name: 'Red hot (the Draper point)', k: 798 },
-  { key: 'lava', name: 'Lava', k: 1400 },
-  { key: 'filament', name: 'A tungsten filament', k: 2700 },
-  { key: 'sun', name: 'The Sun\'s surface', k: 5772 },
-  { key: 'sirius', name: 'Sirius', k: 9940 },
-  { key: 'spica', name: 'Spica, a blue giant', k: 25400 },
-  { key: 'corona', name: 'The Sun\'s corona', k: 1.5e6 },
+  { key: 'cmb', name: 'The cosmic microwave background', k: 2.7255,
+    about: 'The afterglow of the Big Bang. It was set free about 380,000 years after the start, when the universe had cooled enough for atoms to form, and the expansion of space has stretched it ever since, from orange-red to microwaves. It is the same in every direction to about one part in 100,000.' },
+  { key: 'nitrogen', name: 'Liquid nitrogen', k: 77,
+    about: 'Nitrogen boils at −196 °C. Even this cold, it glows, faintly, in the far infrared. Everything above absolute zero does.' },
+  { key: 'you', name: 'You', k: 310,
+    about: 'Body temperature, 37 °C; your skin is a few degrees cooler. Thermal cameras see your glow, which peaks near 10 µm. You give out a lot of it, but take in nearly as much from the warm room around you.' },
+  { key: 'oven', name: 'A hot oven (200 °C)', k: 473,
+    about: 'Hot enough to burn, still far too cool to see glowing. A grill looks red because its elements run much hotter than the oven.' },
+  { key: 'red-hot', name: 'Red hot (the Draper point)', k: 798,
+    about: 'In 1847 John William Draper found that everything starts to glow a dull red at about the same temperature, about 525 °C, whatever it is made of. That is what a blackbody predicts.' },
+  { key: 'lava', name: 'Lava', k: 1400,
+    about: 'Fresh basalt lava comes out at about 1,100 to 1,200 °C and glows orange, then darkens to red and black as its surface cools. Blacksmiths judge the heat of iron by the same colours.' },
+  { key: 'filament', name: 'A tungsten filament', k: 2700,
+    about: 'An old-style light bulb. Most of its power comes out as infrared heat, not light, which is why such bulbs were phased out in favour of LEDs.' },
+  { key: 'sun', name: 'The Sun\'s surface', k: 5772,
+    about: 'The temperature a perfect blackbody the size of the Sun would need to give out the Sun\'s power. Its real spectrum, in Visible light > Sunlight, follows this curve closely, with dark lines where gases absorb.' },
+  { key: 'sirius', name: 'Sirius', k: 9940,
+    about: 'The brightest star in the night sky, 8.6 light years away and about twice the Sun\'s mass. Its light peaks in the ultraviolet, and it looks white with a touch of blue.' },
+  { key: 'spica', name: 'Spica, a blue giant', k: 25400,
+    about: 'The brightest star in Virgo, about 250 light years away: two hot stars orbiting each other every four days. The larger is about 10 times the Sun\'s mass, with a surface near 25,000 K.' },
+  { key: 'corona', name: 'The Sun\'s corona', k: 1.5e6,
+    about: 'The Sun\'s outer atmosphere, at one to two million degrees; see it in X-rays in The sky. It is far too thin to be a blackbody, so this curve shows where its light peaks, not how bright it is.' },
 ];
+
+// How a blackbody's power divides between infrared, visible, ultraviolet and X-rays (and shorter), as fractions.
+// Integrates Planck's law on a log grid from 1/100 to 1,000 times the peak wavelength, which holds all but a
+// trace of the power.
+export function shares(k) {
+  const peak = wienPeak(k), vis = byKey('visible'), xray = byKey('xray').from, steps = 3000;
+  const lo = Math.log(peak / 100), hi = Math.log(peak * 1000), d = (hi - lo) / steps;
+  const out = { infrared: 0, visible: 0, ultraviolet: 0, xray: 0 };
+  let total = 0;
+  for (let i = 0; i < steps; i++) {
+    const m = Math.exp(lo + (i + 0.5) * d), e = planck(m, k) * m * d;
+    total += e;
+    out[m > vis.from ? 'infrared' : m >= vis.to ? 'visible' : m > xray ? 'ultraviolet' : 'xray'] += e;
+  }
+  for (const key in out) out[key] /= total;
+  return out;
+}
 
 // Peak spectral radiance (per unit wavelength) of a blackbody, from Wien's law.
 const peakB = k => planck(wienPeak(k), k);
