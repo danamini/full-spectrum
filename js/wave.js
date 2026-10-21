@@ -1,5 +1,7 @@
 // The wave view: the light at the cursor as a travelling wave beside a real thing of the same size, or as a
-// stream of photons. Drawn on a 2D canvas inside the rectangle the page leaves free.
+// stream of photons. Words and measurements are drawn on a 2D canvas inside the rectangle the page leaves free;
+// the thing, the wave and the photons go to the 3D stage underneath (wave3d.js) once it has loaded. Until then,
+// or without WebGL, the wave and photons are drawn flat and the thing is left out.
 import { frequency, photonEnergyEV, photons } from './physics.js';
 import { bandAt } from './bands.js';
 import { spectral, VISIBLE } from './colour.js';
@@ -42,10 +44,12 @@ export class WaveView {
   }
 
   draw(t) {
-    const { ctx, dpr } = this;
+    const { ctx, dpr, stage } = this;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, this.size.w, this.size.h);
+    if (stage) stage.resize(this.size.w, this.size.h, Math.min(this.dpr, 1.5));
     if (this.mode === 'photons') this.drawPhotons(t); else this.drawWave(t);
+    stage?.render(t);
   }
 
   drawWave(t) {
@@ -62,13 +66,10 @@ export class WaveView {
     const obj = pick(physW);
     const spx = (obj.m / physW) * W;
     const ocx = rect.x + rect.w / 2;
+    const shown = spx >= 3 && spx <= W * 1.6;
+    this.stage?.model(shown ? obj.key : null, ocx, cy, spx);
     ctx.save();
-    if (spx >= 3 && spx <= W * 1.6) {
-      ctx.globalAlpha = 0.9;
-      ctx.translate(ocx, cy);
-      obj.draw(ctx, spx);
-      ctx.restore();
-      ctx.save();
+    if (shown) {
       // Its size, measured underneath (or beside, for tall things).
       ctx.strokeStyle = 'rgba(230, 235, 243, 0.45)'; ctx.fillStyle = '#c4ccdb'; ctx.lineWidth = 1;
       ctx.font = '500 12px "IBM Plex Sans", sans-serif'; ctx.textAlign = 'center';
@@ -97,20 +98,23 @@ export class WaveView {
 
     // The wave, glowing.
     const phase = 2 * Math.PI * SHOWN_HZ * t;
-    ctx.save();
-    ctx.beginPath();
+    const pts = [];
     for (let i = 0; i <= W; i += 2) {
-      const x = x0 + i;
       const e = Math.min(1, Math.min(i, W - i) / 70), envelope = e * e * (3 - 2 * e);
-      const y = cy - A * envelope * Math.sin((2 * Math.PI * i) / pxPerλ - phase);
-      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      pts.push(x0 + i, cy - A * envelope * Math.sin((2 * Math.PI * i) / pxPerλ - phase));
     }
-    ctx.lineJoin = 'round';
-    ctx.shadowColor = colour; ctx.shadowBlur = 18;
-    ctx.strokeStyle = colour; ctx.lineWidth = 3;
-    ctx.stroke();
-    ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1; ctx.stroke();
-    ctx.restore();
+    if (this.stage) { this.stage.wave(pts, rgb); this.stage.photons(null); }
+    else {
+      ctx.save();
+      ctx.beginPath();
+      for (let i = 0; i < pts.length; i += 2) i ? ctx.lineTo(pts[i], pts[i + 1]) : ctx.moveTo(pts[i], pts[i + 1]);
+      ctx.lineJoin = 'round';
+      ctx.shadowColor = colour; ctx.shadowBlur = 18;
+      ctx.strokeStyle = colour; ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.restore();
+    }
 
     // One wavelength, crest to crest, measured above.
     let crest = ((0.25 + phase / (2 * Math.PI)) % 1) * pxPerλ;
@@ -152,14 +156,13 @@ export class WaveView {
     const g = ctx.createLinearGradient(0, cy - beam / 2, 0, cy + beam / 2);
     g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, `rgba(${rgb.join(',')},0.07)`); g.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = g; ctx.fillRect(x0, cy - beam / 2, W, beam);
-    ctx.fillStyle = `rgb(${rgb.join(' ')})`;
-    ctx.shadowColor = `rgb(${rgb.join(' ')})`; ctx.shadowBlur = 4 + e * 14;
-    const speed = 0.16;
-    for (let i = 0; i < n; i++) {
-      const d = this.dots[i];
-      const x = x0 + (((d.x + t * speed) % 1) * W);
-      const y = cy + d.y * beam;
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    const speed = 0.16, pts = [];
+    for (let i = 0; i < n; i++) { const d = this.dots[i]; pts.push(x0 + (((d.x + t * speed) % 1) * W), cy + d.y * beam); }
+    if (this.stage) { this.stage.model(null); this.stage.wave(null); this.stage.photons(pts, r * 2 + 3 + e * 10, rgb, e); }
+    else {
+      ctx.fillStyle = `rgb(${rgb.join(' ')})`;
+      ctx.shadowColor = `rgb(${rgb.join(' ')})`; ctx.shadowBlur = 4 + e * 14;
+      for (let i = 0; i < pts.length; i += 2) { ctx.beginPath(); ctx.arc(pts[i], pts[i + 1], r, 0, Math.PI * 2); ctx.fill(); }
     }
     ctx.restore();
 

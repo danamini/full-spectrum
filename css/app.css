@@ -44,6 +44,8 @@ kbd { font: 500 11px/1 var(--body); padding: 3px 6px; border: 1px solid var(--ru
   background: radial-gradient(ellipse at 40% 35%, rgba(40, 60, 110, 0.22), transparent 60%); }
 .view-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
 .view-host { position: absolute; display: none; }
+/* The 3D layer is drawn on black and added to the page's light, so its glows have no edges. */
+.view-canvas.gl { mix-blend-mode: screen; }
 .view-host canvas { display: block; touch-action: none; cursor: grab; }
 body[data-view="spectrum"]:not([data-mode="field"]) [data-for="spectrum"],
 body[data-view="spectrum"][data-mode="field"] .views [data-for="field"],

@@ -37,6 +37,8 @@ const state = {
 // ---------------------------------------------------------------- views
 const ribbon = new Ribbon($('#ribbon'), { onChange: changed, onPick: t => go(`thing-${t.key}`) });
 const wave = new WaveView($('#waveCanvas'));
+// The 3D models and glow load after the page is up; until then the wave view draws flat.
+import('./wave3d.js').then(m => { wave.stage = new m.WaveStage($('#waveGL')); }).catch(err => console.warn('3D wave view unavailable:', err));
 const vis = new VisibleView($('#visCanvas'));
 const bb = new BlackbodyView($('#bbCanvas'));
 let field = null, air = null, sky = null, airMod = null, fieldMod = null;
@@ -518,6 +520,7 @@ function photo() {
   c.fillStyle = '#03050b'; c.fillRect(0, 0, W, H);
   const src = state.view === 'spectrum' ? (state.mode === 'field' ? field?.renderer.domElement : $('#waveCanvas'))
     : { visible: $('#visCanvas'), blackbody: $('#bbCanvas'), air: $('#airCanvas') }[state.view];
+  if (src === $('#waveCanvas') && wave.stage) { c.globalCompositeOperation = 'screen'; c.drawImage($('#waveGL'), 0, 0, W, H); c.globalCompositeOperation = 'source-over'; }
   if (src) { const r = src.getBoundingClientRect(); c.drawImage(src, r.left, r.top, r.width, r.height); }
   if (state.view === 'sky') { const im = $('#skyHost .sky-stage img.on'), r = im?.getBoundingClientRect(); if (im?.complete && r) c.drawImage(im, r.left, r.top, r.width, r.height); }
   const rr = $('#ribbon').getBoundingClientRect();
@@ -624,4 +627,4 @@ requestAnimationFrame(frame);
 document.fonts?.ready.then(() => { ribbon.dirty = true; });
 
 // For tests and the console.
-window.spectrum = { ribbon, state, go, P };
+window.spectrum = { ribbon, state, go, P, wave };

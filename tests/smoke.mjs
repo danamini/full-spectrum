@@ -101,6 +101,9 @@ await test('typing a value into the readout', async page => {
 
 await test('wave, 3D fields and photons', async page => {
   await go(page, 'thing-fm');
+  // The 3D layer loads and shows the model of the thing the scale picks (FM's 3 m wave: a person).
+  const model = await page.evaluate(() => [spectrum.wave.stage?.current?.key, spectrum.wave.stage?.current?.obj.visible]);
+  expect(model[0] === 'person' && model[1], `3D model: ${model}`);
   for (const mode of ['field', 'photons', 'wave']) {
     await page.click(`.seg [data-mode="${mode}"]`); await wait(page, 1500);
     expect(await page.evaluate(() => spectrum.state.mode) === mode, mode);

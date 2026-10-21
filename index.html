@@ -21,6 +21,7 @@
 <body data-view="spectrum" data-mode="wave">
   <!-- The views: one shows at a time, inside the space the panels leave. -->
   <div class="views">
+    <canvas id="waveGL" class="view-canvas gl" data-for="spectrum" aria-hidden="true"></canvas>
     <canvas id="waveCanvas" class="view-canvas" data-for="spectrum"></canvas>
     <div id="fieldHost" class="view-host" data-for="field" aria-label="3D view of the electric and magnetic fields. Drag to turn."></div>
     <div class="field-labels" data-for="field" aria-hidden="true">
