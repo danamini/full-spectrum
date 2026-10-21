@@ -1,0 +1,11 @@
+{
+  "name": "earth-roughness",
+  "kind": "map",
+  "title": "2k_earth_specular_map.tif",
+  "author": "Solar System Scope (INOVE), based on NASA elevation and imagery data",
+  "source": "https://www.solarsystemscope.com/textures/",
+  "licence": "CC BY 4.0",
+  "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "changes": "resized to 1024 px wide, inverted into a roughness map (from 0.59 to 1), saved as WebP",
+  "fetched": "2026-10-21"
+}

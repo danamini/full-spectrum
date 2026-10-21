@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import * as micro from './micro.js';
+import { TEXTURES } from '../data/textures.js';
 import { proton as protonCloud, PROJ, RADIUS as PROTON_RADIUS, nucleus, cloudMaterial, pointsFrom, buffer, push, randomDir, tick } from './nucleon.js';
 import { Beads } from './beads.js';
 
@@ -45,21 +46,6 @@ function canvasTexture(w, h, paint, colour = true) {
   if (colour) t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 4;
   return t;
-}
-// A texture for a sphere: fn gets the point on the unit sphere and the latitude, and returns [r, g, b, a?].
-function sphereTexture(w, h, fn, colour = true) {
-  return canvasTexture(w, h, (ctx) => {
-    const img = ctx.createImageData(w, h), d = img.data;
-    for (let y = 0; y < h; y++) {
-      const lat = Math.PI / 2 - (y + 0.5) / h * Math.PI, cl = Math.cos(lat), sl = Math.sin(lat);
-      for (let x = 0; x < w; x++) {
-        const lon = (x + 0.5) / w * TAU;
-        const [r, g, b, a = 255] = fn(cl * Math.cos(lon), sl, -cl * Math.sin(lon), lat, lon);
-        const i = (y * w + x) * 4; d[i] = r; d[i + 1] = g; d[i + 2] = b; d[i + 3] = a;
-      }
-    }
-    ctx.putImageData(img, 0, 0);
-  }, colour);
 }
 // Vertex colours are linear light; these helpers take the usual display (sRGB) values.
 const lin = c => c.map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
@@ -123,79 +109,50 @@ function turntable(obj, speed = 0.35, tilt = 0.25) {
 }
 
 // ---------------------------------------------------------------- planets and moons
-function planet(map, { bump = null, roughness = 0.9, roughnessMap = null, oblate = 1, tilt = 0.4, spin = 0.12, atmosphere = null, clouds = null } = {}) {
+// Real maps (assets/textures/, tools/fetch_textures.mjs: Solar System Scope, CC BY 4.0, from NASA data).
+const loader = new THREE.TextureLoader(), maps = new Map();
+function map(name, colour = true) {
+  if (!maps.has(name)) {
+    const t = loader.load(TEXTURES[name].file);
+    if (colour) t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 8;
+    maps.set(name, t);
+  }
+  return maps.get(name);
+}
+// The direction the sunlight comes from, as the stage's key light (view space: the camera never turns).
+const SUN = new THREE.Vector3(-0.6, 0.8, 1).normalize();
+function planet(colourMap, { roughness = 0.9, roughnessMap = null, normalMap = null, night = null, oblate = 1, tilt = 0.4, spin = 0.12, atmosphere = null, clouds = null } = {}) {
   const group = new THREE.Group(), axis = new THREE.Group();
   axis.rotation.z = tilt; group.add(axis);
-  const mat = std(0xffffff, { map, roughness, roughnessMap, bumpMap: bump, bumpScale: bump ? 2.5 : 0 });
-  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.5, 96, 64), mat);
+  const mat = std(0xffffff, { map: colourMap, roughness, roughnessMap, normalMap, normalScale: new THREE.Vector2(1.5, 1.5), envMapIntensity: 0.12 });
+  if (night) {
+    // city lights on the night side only: the emissive map, faded out where the sun is up
+    Object.assign(mat, { emissive: new THREE.Color(0xffc98a), emissiveMap: night, emissiveIntensity: 0.8 });
+    mat.onBeforeCompile = sh => {
+      sh.uniforms.uSun = { value: SUN };
+      sh.fragmentShader = 'uniform vec3 uSun;\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  totalEmissiveRadiance *= smoothstep(0.05, -0.3, dot(normal, uSun)) * smoothstep(0.05, 0.35, normal.z);');
+    };
+  }
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.5, 128, 96), mat);
   ball.scale.y = oblate; axis.add(ball);
   let cloud = null;
   if (clouds) {
-    cloud = new THREE.Mesh(new THREE.SphereGeometry(0.508, 96, 64), std(0xffffff, { alphaMap: clouds, transparent: true, depthWrite: false, roughness: 1 }));
+    cloud = new THREE.Mesh(new THREE.SphereGeometry(0.506, 128, 96), std(0xffffff, { alphaMap: clouds, transparent: true, depthWrite: false, roughness: 1 }));
     axis.add(cloud);
   }
-  if (atmosphere) group.add(glowShell(new THREE.SphereGeometry(0.53, 64, 48), atmosphere, { power: 3.5, strength: 0.9 }));
-  return { obj: group, update: t => { ball.rotation.y = t * spin; if (cloud) cloud.rotation.y = t * spin * 1.25; } };
-}
-
-let earthTex;
-function earthTextures() {
-  if (earthTex) return earthTex;
-  const land = (x, y, z) => fbm(x * 1.7 + 3, y * 1.7, z * 1.7, 6);
-  const map = sphereTexture(512, 256, (x, y, z, lat) => {
-    const h = land(x, y, z), ice = Math.abs(lat) > 1.2 + 0.15 * (fbm(x * 4, y * 4, z * 4, 3) - 0.5);
-    if (ice) return [236, 242, 248];
-    if (h < 0.53) { const deep = smooth(0.53, 0.35, h); return mix([40, 110, 170], [10, 38, 92], deep); }
-    const dry = smooth(0.3, 0.0, Math.abs(lat) - 0.35) * smooth(0.55, 0.7, fbm(x * 3, y * 3, z * 3, 4));
-    return mix(mix([64, 118, 52], [120, 140, 70], (h - 0.53) * 6), [196, 168, 112], dry);
-  });
-  const rough = sphereTexture(256, 128, (x, y, z) => { const v = land(x, y, z) < 0.53 ? 70 : 230; return [v, v, v]; }, false);
-  const clouds = sphereTexture(512, 256, (x, y, z) => { const c = smooth(0.58, 0.8, fbm(x * 3 + 9, y * 6, z * 3, 6)) * 0.9; const v = Math.round(255 * c); return [v, v, v]; }, false);
-  return (earthTex = { map, rough, clouds });
-}
-let moonTex;
-function moonTexture() {
-  if (moonTex) return moonTex;
-  const r = rng(7), craters = Array.from({ length: 90 }, () => { const u = r() * 2 - 1, a = r() * TAU, s = Math.sqrt(1 - u * u); return [s * Math.cos(a), u, s * Math.sin(a), 0.03 + r() ** 3 * 0.25]; });
-  return (moonTex = sphereTexture(512, 256, (x, y, z) => {
-    let v = 150 + 70 * (fbm(x * 4, y * 4, z * 4, 6) - 0.5);
-    v -= 55 * smooth(0.45, 0.62, fbm(x * 1.3 + 5, y * 1.3, z * 1.3, 4)); // the dark maria
-    for (const [cx, cy, cz, cr] of craters) {
-      const d = Math.acos(Math.min(1, x * cx + y * cy + z * cz)) / cr;
-      if (d < 1.25) v += d < 1 ? -26 * (1 - d * d) : 30 * (1.25 - d) * 4 * (d - 1);
-    }
-    return [v, v, v * 0.98];
-  }));
+  if (atmosphere) group.add(glowShell(new THREE.SphereGeometry(0.525, 64, 48), atmosphere, { power: 4, strength: 1 }));
+  return { obj: group, update: t => { ball.rotation.y = t * spin; if (cloud) cloud.rotation.y = t * spin * 1.2; } };
 }
 
 const MODELS = {
   // Bead models of real structures and whole microbes: js/micro.js.
   haemoglobin: micro.haemoglobin, dna: micro.dna, ribosome: micro.ribosome, flu: micro.flu, mimivirus: micro.mimivirus, bacterium: micro.bacterium,
 
-  jupiter() {
-    const map = sphereTexture(512, 256, (x, y, z, lat, lon) => {
-      const warp = fbm(x * 3, y * 3, z * 3, 5) - 0.5;
-      const band = Math.sin(lat * 14 + warp * 3.2 + fbm(x * 9, y * 22, z * 9, 3) * 0.8);
-      let c = mix([222, 196, 160], [150, 96, 62], band * 0.5 + 0.5);
-      c = mix(c, [240, 226, 205], smooth(0.2, 0.0, Math.abs(lat)) * 0.6);
-      const d = Math.hypot((lat + 0.39) / 0.075, ((lon - 2.4 + Math.PI) % TAU - Math.PI) / 0.16); // the Great Red Spot
-      return mix(c, [196, 92, 60], smooth(1.1, 0.5, d + warp * 0.6));
-    });
-    return planet(map, { oblate: 0.935, tilt: 0.05, spin: 0.25 });
-  },
-  neptune() {
-    const map = sphereTexture(512, 256, (x, y, z, lat) => {
-      const band = Math.sin(lat * 9 + (fbm(x * 3, y * 3, z * 3, 4) - 0.5) * 3);
-      const c = mix([86, 128, 214], [44, 76, 170], band * 0.5 + 0.5);
-      return mix(c, [210, 230, 255], smooth(0.72, 0.85, fbm(x * 5, y * 12, z * 5, 4)) * 0.8);
-    });
-    return planet(map, { tilt: 0.49, spin: 0.2, atmosphere: '#7fb2ff' });
-  },
-  earth() {
-    const { map, rough, clouds } = earthTextures();
-    return planet(map, { roughness: 1, roughnessMap: rough, tilt: 0.41, spin: 0.15, atmosphere: '#6fb6ff', clouds });
-  },
-  moon() { const m = moonTexture(); return planet(m, { bump: m, tilt: 0.03, spin: 0.08 }); },
+  jupiter: () => planet(map('jupiter'), { oblate: 0.935, tilt: 0.05, spin: 0.25 }),
+  neptune: () => planet(map('neptune'), { tilt: 0.49, spin: 0.2, atmosphere: '#7fb2ff' }),
+  earth: () => planet(map('earth-day'), { roughness: 1, roughnessMap: map('earth-roughness', false), normalMap: map('earth-normal', false), night: map('earth-night'), clouds: map('earth-clouds', false), tilt: 0.41, spin: 0.15, atmosphere: '#6fb6ff' }),
+  moon: () => planet(map('moon'), { tilt: 0.03, spin: 0.08, roughness: 0.95 }),
 
   // Two bodies, or two places, a distance apart. Their dots keep a fixed size on screen.
   earthMoon() {
@@ -209,70 +166,111 @@ const MODELS = {
   londonEdinburgh: () => route([V(-0.5, -0.02, 0), V(-0.25, 0.05, 0.03), V(0, 0.02, -0.02), V(0.25, 0.06, 0.02), V(0.5, 0, 0)], '#f2b45a'),
   marathon: () => route([V(-0.5, 0, 0), V(-0.35, 0.08, 0.05), V(-0.15, -0.05, -0.06), V(0.05, 0.07, 0.02), V(0.22, -0.06, 0.05), V(0.38, 0.05, -0.03), V(0.5, 0, 0)], '#8ef0b0'),
 
+  // Everest from real heights (assets/textures/everest.bin: a 16 km square round the summit), as a block of
+  // ground from sea level up, so its full 8,849 m is the unit. Snow, glacier and rock are coloured from height
+  // and steepness; the dark Yellow Band of limestone crosses the summit pyramid near 8,300 m.
   everest() {
-    const S = 140, size = 2.0, g = new THREE.PlaneGeometry(size, size, S, S);
-    g.rotateX(-Math.PI / 2);
-    const p = g.attributes.position, col = [];
-    let max = 0;
-    const height = (x, z) => {
-      const r = Math.hypot(x * 1.2, z);
-      const ridge = 1 - Math.abs(fbm(x * 2.2 + 4, 0, z * 2.2, 5) * 2 - 1);
-      return Math.exp(-r * r * 2.2) * (0.75 + 0.35 * ridge) + 0.18 * ridge * Math.exp(-r * r * 0.7) - 0.04 * r;
-    };
-    for (let i = 0; i < p.count; i++) { const h = height(p.getX(i), p.getZ(i)); p.setY(i, h); max = Math.max(max, h); }
-    for (let i = 0; i < p.count; i++) p.setY(i, p.getY(i) / max);
-    g.computeVertexNormals();
-    const n = g.attributes.normal;
-    for (let i = 0; i < p.count; i++) {
-      const h = p.getY(i), steep = 1 - n.getY(i), x = p.getX(i), z = p.getZ(i);
-      const snow = smooth(0.42, 0.55, h + 0.12 * (fbm(x * 8, h * 3, z * 8, 3) - 0.5)) * smooth(0.5, 0.25, steep);
-      const rock = mix([0.2, 0.19, 0.21], [0.36, 0.32, 0.29], fbm(x * 6, h * 4, z * 6, 3));
-      const c = mix(mix(rock, [0.2, 0.24, 0.18], smooth(0.12, 0.0, h)), [0.78, 0.82, 0.88], snow);
-      col.push(...lin(c));
-    }
-    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-    // Fade the square edges of the terrain into the dark.
-    const fade = canvasTexture(128, 128, (ctx) => { const gr = ctx.createRadialGradient(64, 64, 30, 64, 64, 64); gr.addColorStop(0, '#fff'); gr.addColorStop(1, '#000'); ctx.fillStyle = gr; ctx.fillRect(0, 0, 128, 128); }, false);
-    const land = new THREE.Mesh(g, std(0xffffff, { vertexColors: true, roughness: 0.95, alphaMap: fade, transparent: true }));
-    land.position.y = -0.5;
-    const inner = new THREE.Group(); inner.add(land);
-    // A plume of snow blown off the summit, the way the jet stream does.
-    const r = rng(3), plume = [];
-    for (let i = 0; i < 260; i++) { const k = r(); plume.push(0.05 + k * 0.7, 0.45 - k * 0.12 + (r() - 0.5) * 0.08 * (1 + k * 2), (r() - 0.5) * 0.1 * (1 + k * 3)); }
-    const snow = sparks(plume, 0xeaf2ff, 0.025, { opacity: 0.12 });
-    inner.add(snow);
-    const holder = new THREE.Group(); holder.rotation.x = 0.32; holder.add(inner);
-    return { obj: holder, update: (t) => { inner.rotation.y = Math.sin(t * 0.15) * 0.6 + 0.3; snow.position.x = (t * 0.02) % 0.1; snow.material.opacity = 0.1 + 0.04 * Math.sin(t * 1.3); } };
+    const info = TEXTURES.everest, M = 8849, holder = new THREE.Group(), inner = new THREE.Group();
+    holder.rotation.x = 0.38; holder.add(inner);
+    const plume = new THREE.Group(); inner.add(plume);
+    fetch(info.file).then(r => r.arrayBuffer()).then(buf => {
+      const full = new Int16Array(buf), F = info.grid, KEEP = 11000;                 // the middle 11 km: Everest, Lhotse and Nuptse
+      const N = Math.round((KEEP / info.spanMetres) * (F - 1)) + 1, off = Math.round((F - N) / 2), h = new Int16Array(N * N);
+      for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) h[j * N + i] = full[(j + off) * F + i + off];
+      const span = ((N - 1) / (F - 1)) * info.spanMetres / M, step = span / (N - 1);
+      const g = new THREE.PlaneGeometry(span, span, N - 1, N - 1); g.rotateX(-Math.PI / 2);
+      const p = g.attributes.position;
+      let top = 0, peak = new THREE.Vector3();
+      for (let i = 0; i < p.count; i++) { const y = h[i] / M; p.setY(i, y); if (y > top) { top = y; peak.set(p.getX(i), y, p.getZ(i)); } }
+      g.computeVertexNormals();
+      const n = g.attributes.normal, col = [];
+      for (let i = 0; i < p.count; i++) {
+        const metres = p.getY(i) * M, steep = 1 - n.getY(i), x = p.getX(i), z = p.getZ(i), noise = fbm(x * 40, 0.5, z * 40, 4);
+        const rock = mix([0.32, 0.29, 0.27], [0.47, 0.42, 0.37], noise);
+        let c = mix(rock, [0.24, 0.22, 0.22], smooth(0.45, 0.8, steep));                                   // steep faces darker
+        c = mix(c, [0.55, 0.48, 0.33], smooth(8150, 8250, metres) * smooth(8500, 8400, metres) * smooth(0.25, 0.5, steep)); // the Yellow Band
+        const snow = smooth(5900 + 600 * noise, 6400 + 600 * noise, metres) * smooth(0.42, 0.22, steep);
+        const glacier = smooth(5000, 5300, metres) * smooth(0.16, 0.05, steep) * (1 - snow);
+        c = mix(c, [0.8, 0.84, 0.9], snow);
+        c = mix(c, [0.62, 0.7, 0.76], glacier * 0.8);
+        col.push(...lin(c));
+      }
+      g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+      const land = new THREE.Mesh(g, std(0xffffff, { vertexColors: true, roughness: 0.92 }));
+      // the block's sides, from the surface's edge down to sea level, in bands of rock
+      const sides = [], sideCol = [], half = span / 2;
+      const edge = [];
+      for (let i = 0; i < N; i++) edge.push([-half + i * step, -half, 0, i]);
+      for (let j = 0; j < N; j++) edge.push([half, -half + j * step, 1, j]);
+      for (let i = N - 1; i >= 0; i--) edge.push([-half + i * step, half, 2, i]);
+      for (let j = N - 1; j >= 0; j--) edge.push([-half, -half + j * step, 3, j]);
+      const at = (x, z) => h[Math.round((z + half) / step) * N + Math.round((x + half) / step)] / M;
+      for (let k = 0; k < edge.length - 1; k++) {
+        const [x1, z1] = edge[k], [x2, z2] = edge[k + 1], y1 = at(x1, z1), y2 = at(x2, z2);
+        sides.push(x1, y1, z1, x2, y2, z2, x1, 0, z1, x2, y2, z2, x2, 0, z2, x1, 0, z1);
+        for (const y of [y1, y2, 0, y2, 0, 0]) { const band = 0.5 + 0.5 * Math.sin(y * 90 + fbm(x1 * 30, y * 20, z1 * 30, 3) * 4); sideCol.push(...lin(mix([0.2, 0.17, 0.15], [0.34, 0.29, 0.25], band * (0.4 + y)))); }
+      }
+      const sg = new THREE.BufferGeometry();
+      sg.setAttribute('position', new THREE.Float32BufferAttribute(sides, 3));
+      sg.setAttribute('color', new THREE.Float32BufferAttribute(sideCol, 3));
+      sg.computeVertexNormals();
+      const walls = new THREE.Mesh(sg, std(0xffffff, { vertexColors: true, roughness: 1, side: THREE.DoubleSide, emissive: 0x1c140e }));
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(span, span).rotateX(Math.PI / 2), std(0x15120f));
+      const block = new THREE.Group(); block.add(land, walls, floor); block.position.y = -0.5;
+      inner.add(block);
+      // snow blown off the summit by the jet stream
+      const r = rng(3), pts = [];
+      for (let i = 0; i < 220; i++) { const k = r(); pts.push(peak.x + 0.02 + k * 0.5, peak.y - 0.5 - k * 0.05 + (r() - 0.5) * 0.04 * (1 + k * 2), peak.z + (r() - 0.5) * 0.05 * (1 + k * 3)); }
+      plume.add(sparks(pts, 0xeaf2ff, 0.02, { opacity: 0.1 }));
+    });
+    return { obj: holder, update: t => { inner.rotation.y = 0.6 + Math.sin(t * 0.12) * 0.5; plume.position.x = (t * 0.015) % 0.06; } };
   },
 
+  // The Burj Khalifa: three wings round a hexagonal core (its 'Y' plan, from the desert flower Hymenocallis),
+  // stepping back one wing at a time in a spiral, 27 times, up to the top floor near 585 m; then the core alone,
+  // and the spire to 828 m, the unit. Glass and steel, with lights in some windows.
   burj() {
-    const g = new THREE.Group();
-    // Three wings round a core, stepping back as the tower rises.
-    const windows = canvasTexture(64, 256, (ctx) => {
-      ctx.fillStyle = '#20283a'; ctx.fillRect(0, 0, 64, 256);
-      for (let y = 0; y < 256; y += 4) for (let x = 0; x < 64; x += 4) { const on = hash(x, y, 1) > 0.72; ctx.fillStyle = on ? `rgba(255,214,150,${0.5 + hash(x, y, 2) * 0.5})` : '#3a4a66'; ctx.fillRect(x + 1, y + 1, 2, 2); }
+    const g = new THREE.Group(), W = 0.012, CORE = 0.026, BASE = 0.093, TOP = 0.71, TIERS = 27;
+    const windows = canvasTexture(128, 256, ctx => {
+      ctx.fillStyle = '#1b2433'; ctx.fillRect(0, 0, 128, 256);
+      for (let y = 0; y < 256; y += 4) for (let x = 0; x < 128; x += 4) { const on = hash(x, y, 1) > 0.8; ctx.fillStyle = on ? `rgba(255,214,150,${0.45 + hash(x, y, 2) * 0.5})` : '#2b3a52'; ctx.fillRect(x + 1, y + 1, 2, 2); }
+      ctx.fillStyle = 'rgba(210,225,240,0.55)'; for (let x = 0; x < 128; x += 8) ctx.fillRect(x, 0, 1, 256);   // the steel fins
     });
-    windows.wrapS = windows.wrapT = THREE.RepeatWrapping;
-    const glass = phys(0x9fb4cc, { metalness: 0.85, roughness: 0.18, emissive: 0xffffff, emissiveMap: windows, emissiveIntensity: 0.55, clearcoat: 1, envMapIntensity: 1.2 });
-    const tiers = 14, H = 0.78;
-    for (let i = 0; i < tiers; i++) {
-      const y0 = (i / tiers) * H, h = H / tiers + 0.002, s = 0.16 * (1 - i / tiers * 0.82);
+    windows.wrapS = windows.wrapT = THREE.RepeatWrapping; windows.repeat.set(30, 6);
+    const glass = phys(0xc2d0e0, { metalness: 0.75, roughness: 0.16, clearcoat: 1, envMapIntensity: 1.8, emissive: 0xffffff, emissiveMap: windows, emissiveIntensity: 0.65 });
+    const steel = phys(0xd8dee6, { metalness: 1, roughness: 0.22 });
+    // the radius of the floor plate in each direction: the furthest of the core and the three wings, each wing a
+    // rounded bar from the centre out to its length
+    const wingDist = (dx, dy, a, len) => { const c = Math.cos(a), s = Math.sin(a), u = dx * c + dy * s, v = -dx * s + dy * c, uc = Math.max(0, Math.min(len - W, u)); return Math.hypot(u - uc, v); };
+    const plan = lens => {
       const shape = new THREE.Shape();
-      for (let k = 0; k <= 96; k++) {
-        const a = (k / 96) * TAU, r = s * (0.45 + 0.55 * Math.abs(Math.cos((3 * a) / 2)) ** 3);
-        k ? shape.lineTo(Math.cos(a) * r, Math.sin(a) * r) : shape.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+      for (let k = 0; k <= 240; k++) {
+        const th = (k / 240) * TAU, dx = Math.cos(th), dy = Math.sin(th);
+        let lo = 0, hi = BASE + W;
+        for (let it = 0; it < 22; it++) { const m = (lo + hi) / 2, x = dx * m, y = dy * m; const inside = Math.hypot(x, y) < CORE || lens.some((L, i) => wingDist(x, y, (i * TAU) / 3 + Math.PI / 2, L) < W); inside ? (lo = m) : (hi = m); }
+        k ? shape.lineTo(dx * lo, dy * lo) : shape.moveTo(dx * lo, dy * lo);
       }
-      const geo = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false, curveSegments: 48 });
+      return shape;
+    };
+    const lens = [BASE, BASE, BASE];
+    for (let k = 0; k < TIERS; k++) {
+      const y0 = (k / TIERS) * TOP, dy = TOP / TIERS;
+      lens[k % 3] = CORE + (BASE - CORE) * (1 - (Math.floor(k / 3) + 1) / 10) ** 1.15;   // one wing steps back, round and round
+      const geo = new THREE.ExtrudeGeometry(plan(lens), { depth: dy * 0.94, bevelEnabled: false, curveSegments: 1 });
       geo.rotateX(-Math.PI / 2); geo.translate(0, y0, 0);
       g.add(new THREE.Mesh(geo, glass));
+      const ledge = new THREE.Mesh(new THREE.ExtrudeGeometry(plan(lens.map(L => L + 0.0012)), { depth: dy * 0.06, bevelEnabled: false }), steel);
+      ledge.geometry.rotateX(-Math.PI / 2); ledge.geometry.translate(0, y0 + dy * 0.94, 0);
+      g.add(ledge);
     }
-    const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.002, 0.018, 1 - H, 12), phys(0xc8d4e4, { metalness: 1, roughness: 0.15 }));
-    spire.position.y = H + (1 - H) / 2; g.add(spire);
-    const beacon = sparks([0, 1, 0], 0xff3a2a, 0.06);
-    g.add(beacon);
+    // above the floors: the core narrowing, then the spire
+    const core = new THREE.Mesh(new THREE.CylinderGeometry(CORE * 0.55, CORE * 0.9, 0.09, 6), glass); core.position.y = TOP + 0.045; g.add(core);
+    const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.0015, CORE * 0.5, 1 - TOP - 0.09, 12), steel); spire.position.y = TOP + 0.09 + (1 - TOP - 0.09) / 2; g.add(spire);
+    for (let k = 0; k < 6; k++) { const ring = new THREE.Mesh(new THREE.TorusGeometry(CORE * (0.48 - k * 0.06), 0.0012, 6, 24), steel); ring.rotation.x = Math.PI / 2; ring.position.y = TOP + 0.1 + k * 0.03; g.add(ring); }
+    const beacon = sparks([0, 1, 0], 0xff3a2a, 0.02); g.add(beacon);
     g.position.y = -0.5;
-    const holder = new THREE.Group(); holder.rotation.x = 0.12; holder.add(g);
-    return { obj: holder, update: t => { g.rotation.y = t * 0.2; beacon.material.opacity = (t % 1.5) < 0.18 ? 1 : 0.08; } };
+    const holder = new THREE.Group(); holder.rotation.x = 0.1; holder.add(g);
+    return { obj: holder, update: t => { g.rotation.y = t * 0.15; beacon.material.opacity = (t % 1.5) < 0.18 ? 1 : 0.08; } };
   },
 
   pitch() {

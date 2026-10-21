@@ -18,6 +18,7 @@ import { fieldNotes, photonNotes, fieldCard, photonFacts } from './notes.js';
 import { MODELS } from '../data/models.js';
 import { EXAMPLE_PICTURES } from '../data/examples.js';
 import { MOLECULES } from '../data/molecules.js';
+import { TEXTURES } from '../data/textures.js';
 import { OBJECTS } from './scale.js';
 import { initWhatsNew } from './whatsnew.js';
 
@@ -92,7 +93,7 @@ function layout() {
   Object.assign($('#bbExamples').style, { left: `${rect.x}px`, width: `${rect.w}px`, top: `${rect.y + rect.h - strip}px` });
   const fh = $('#fieldHost');
   Object.assign(fh.style, { left: `${rect.x}px`, top: `${rect.y}px`, width: `${rect.w}px`, height: `${rect.h}px` });
-  Object.assign($('#waveCredit').style, { left: `${rect.x}px`, width: `${rect.w}px`, top: `${rect.y + rect.h - 34}px` });
+  Object.assign($('#waveCredit').style, { left: `${rect.x}px`, width: `${rect.w}px`, top: `${rect.y + rect.h - 20}px` }); // its bottom edge: it grows upwards (css)
   const sh = $('#skyHost');
   Object.assign(sh.style, { left: `${rect.x}px`, top: `${rect.y}px`, width: `${rect.w}px`, height: `${rect.h}px` });
   field?.resize();
@@ -637,9 +638,14 @@ function waveCredit(key) {
   const m = MODELS[key], a = (href, text) => (href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text));
   const body = SOLAR_BODIES[key], obj = OBJECTS.find(o => o.key === key), name = obj?.name.replace(/^The /, 'the ');
   const pdb = obj?.pdb?.map(k => MOLECULES[k]).filter(Boolean);
-  $('#waveCredit').innerHTML = m ? `3D model: ${a(m.source, m.title)} by ${a(m.authorUrl, m.author)}, ${esc(m.site)} · ${a(m.licenceUrl, m.licence)}`
-    : pdb?.length ? `From the Protein Data Bank: ${pdb.map(s => `${a(s.source, `PDB ${s.entry}`)} (${esc(s.cite)})`).join(', ')} · ${a(pdb[0].licenceUrl, pdb[0].licence)}`
-    : body ? `Fly round ${a(solarTimeline(body), name)} in Solar Timeline` : '';
+  const tex = obj?.maps?.map(k => TEXTURES[k]).filter(Boolean)[0];
+  const parts = [
+    m && `3D model: ${a(m.source, m.title)} by ${a(m.authorUrl, m.author)}, ${esc(m.site)} · ${a(m.licenceUrl, m.licence)}`,
+    pdb?.length && `From the Protein Data Bank: ${pdb.map(s => `${a(s.source, `PDB ${s.entry}`)} (${esc(s.cite)})`).join(', ')} · ${a(pdb[0].licenceUrl, pdb[0].licence)}`,
+    tex && `${tex.grid ? 'Heights' : 'Map'}: ${a(tex.source, tex.author)} · ${a(tex.licenceUrl, tex.grid ? 'credits' : tex.licence)}`,
+    body && `Fly round ${a(solarTimeline(body), name)} in Solar Timeline`,
+  ].filter(Boolean);
+  $('#waveCredit').innerHTML = parts.join('<br>');
 }
 function drawView(t) {
   if (state.view === 'spectrum') {

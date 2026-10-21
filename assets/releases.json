@@ -4,6 +4,18 @@
   "feedback": "https://github.com/danamini/full-spectrum/issues/new",
   "releases": [
     {
+      "version": "0.0.3",
+      "stage": "Alpha",
+      "status": "next",
+      "date": null,
+      "title": "Real planets, a real Everest",
+      "items": [
+        {"kind": "better", "text": "Jupiter, Neptune, the Earth and the Moon wear real maps made from NASA data (Solar System Scope); the Earth has its clouds, a sheen on the sea and city lights on its night side", "go": "#km-11900"},
+        {"kind": "better", "text": "Everest is built from real heights, a block of ground from sea level to the summit with Lhotse and Nuptse beside it, snow and glacier where they lie", "go": "#km-8.25"},
+        {"kind": "better", "text": "The Burj Khalifa is built from its real plan: three wings round a core, stepping back one at a time in a spiral to the spire", "go": "#m-772"}
+      ]
+    },
+    {
       "version": "0.0.2",
       "stage": "Alpha",
       "status": "released",

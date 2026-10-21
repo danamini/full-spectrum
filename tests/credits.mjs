@@ -25,6 +25,15 @@ for (const o of OBJECTS) for (const k of o.pdb ?? []) {
   if (m) check(m.cite && m.source && m.licence && molDoc.includes(m.source), `${o.key}: structure ${k} not credited`);
 }
 
+// Every real map or height grid a model uses is fetched and credited in docs/credits-textures.md.
+const { TEXTURES } = await import('../data/textures.js');
+const texDoc = await readFile(`${ROOT}docs/credits-textures.md`, 'utf8');
+for (const o of OBJECTS) for (const k of o.maps ?? []) {
+  const t = TEXTURES[k];
+  check(t && existsSync(ROOT + t.file), `${o.key}: map ${k} not fetched`);
+  if (t) check(t.author && t.source && t.licence && texDoc.includes(t.source), `${o.key}: map ${k} not credited`);
+}
+
 // Every Hot things example has its picture, credited in the app's data and in docs/credits-examples.md.
 const { PRESETS } = await import('../js/blackbody.js');
 const { EXAMPLE_PICTURES } = await import('../data/examples.js');

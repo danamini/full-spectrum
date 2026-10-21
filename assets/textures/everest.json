@@ -1,0 +1,20 @@
+{
+  "name": "everest",
+  "kind": "terrain",
+  "grid": 321,
+  "spanMetres": 16000,
+  "min": 4977,
+  "max": 8747,
+  "summit": {
+    "lat": 27.98806,
+    "lon": 86.92528
+  },
+  "zoom": 13,
+  "title": "Terrain Tiles (terrarium), zoom 13",
+  "author": "Mapzen; SRTM and GMTED2010 courtesy of the U.S. Geological Survey; ETOPO1 courtesy of U.S. NOAA",
+  "source": "https://registry.opendata.aws/terrain-tiles/",
+  "licence": "public domain data (SRTM, GMTED2010, ETOPO1), credited as Mapzen asks",
+  "licenceUrl": "https://github.com/tilezen/joerd/blob/master/docs/attribution.md",
+  "changes": "a 16 km square round the summit, resampled to 321 x 321 heights in metres",
+  "fetched": "2026-10-21"
+}

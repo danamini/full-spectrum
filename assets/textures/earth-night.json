@@ -1,0 +1,11 @@
+{
+  "name": "earth-night",
+  "kind": "map",
+  "title": "2k_earth_nightmap.jpg",
+  "author": "Solar System Scope (INOVE), based on NASA elevation and imagery data",
+  "source": "https://www.solarsystemscope.com/textures/",
+  "licence": "CC BY 4.0",
+  "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "changes": "resized to 2048 px wide, saved as WebP",
+  "fetched": "2026-10-21"
+}

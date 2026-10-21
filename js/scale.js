@@ -2,18 +2,19 @@
 // fits beside the current wavelength so the scale can be felt, and shows its 3D model (models3d.js, by key).
 // Sizes: NASA planetary fact sheets; buildings and objects from their owners' published figures; cells and
 // molecules typical values; the proton's charge radius (CODATA 2018, 0.84 fm) doubled.
+// `maps`: the real maps or heights it is drawn with (data/textures.js), credited under it.
 // `pdb`: the Protein Data Bank structures its bead model is built from (data/molecules.js), credited under it.
 // `along`: a distance between two points; `tall`: measured up the screen (for a hair and DNA, their thickness).
 
 export const OBJECTS = [
-  { key: 'earthMoon', name: 'Earth to the Moon', m: 3.844e8, along: true },
-  { key: 'jupiter', name: 'Jupiter', m: 1.3982e8 },
-  { key: 'neptune', name: 'Neptune', m: 4.9528e7 },
-  { key: 'earth', name: 'The Earth', m: 1.2742e7 },
-  { key: 'moon', name: 'The Moon', m: 3.4748e6 },
+  { key: 'earthMoon', name: 'Earth to the Moon', m: 3.844e8, along: true, maps: ['earth-day', 'moon'] },
+  { key: 'jupiter', name: 'Jupiter', m: 1.3982e8, maps: ['jupiter'] },
+  { key: 'neptune', name: 'Neptune', m: 4.9528e7, maps: ['neptune'] },
+  { key: 'earth', name: 'The Earth', m: 1.2742e7, maps: ['earth-day'] },
+  { key: 'moon', name: 'The Moon', m: 3.4748e6, maps: ['moon'] },
   { key: 'londonEdinburgh', name: 'London to Edinburgh', m: 5.34e5, along: true },
   { key: 'marathon', name: 'A marathon', m: 42195, along: true },
-  { key: 'everest', name: 'Mount Everest', m: 8849, tall: true },
+  { key: 'everest', name: 'Mount Everest', m: 8849, tall: true, maps: ['everest'] },
   { key: 'burj', name: 'Burj Khalifa', m: 828, tall: true },
   { key: 'eiffel', name: 'The Eiffel Tower', m: 330, tall: true },
   { key: 'pitch', name: 'A football pitch', m: 105 },

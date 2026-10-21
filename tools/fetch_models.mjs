@@ -115,8 +115,8 @@ files are in \`assets/models/\`. The app names the model, its author and licence
 one is shown.
 
 The other things in the wave view (the planets and Moon, Everest, the Burj Khalifa, the football pitch, the
-phone, the coin, the grain of sand, the hair, the red blood cell and the water molecule) are modelled in code in \`js/models3d.js\`, with their textures
-drawn in code: they are this project's own, as are the bacterium and the giant virus, built from beads in
+phone, the coin, the grain of sand, the hair, the red blood cell and the water molecule) are modelled in code in
+\`js/models3d.js\`; the planets' and Moon's maps and Everest's heights are real (\`docs/credits-textures.md\`). They are this project's own, as are the bacterium and the giant virus, built from beads in
 \`js/micro.js\`. Haemoglobin, DNA, the ribosome and the flu virus's spikes are real structures from the Protein Data
 Bank: see \`docs/credits-molecules.md\`. The proton, the uranium nucleus and the shimmering electron clouds of
 hydrogen and water are drawn as Molecule Viewer (https://moleculeviewer.org, the same author's, MIT) draws them,
