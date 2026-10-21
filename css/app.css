@@ -141,6 +141,8 @@ body[data-view="sky"] .views .sky { display: flex; }
 .details .things a { display: flex; justify-content: space-between; gap: 10px; padding: 4px 8px; margin: 0 -8px; border-radius: 8px; color: var(--text); text-decoration: none; }
 .details .things a:hover { background: rgba(255, 255, 255, 0.04); }
 .details .things a[aria-current="true"] { background: rgba(242, 180, 90, 0.12); }
+.details .examples a > span { display: flex; align-items: center; gap: 8px; }
+.details .swatch { flex: none; width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--rule-strong); }
 .details .things small { color: var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .details .pictures button { display: block; width: calc(100% + 16px); text-align: left; padding: 6px 8px; margin: 0 -8px; border: 0; border-radius: 8px; background: none; cursor: pointer; }
 .details .pictures button:hover { background: rgba(255, 255, 255, 0.04); }

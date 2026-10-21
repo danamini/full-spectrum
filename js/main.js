@@ -3,7 +3,7 @@
 import * as P from './physics.js';
 import { BANDS, SPAN, bandAt, subAt, byKey, effectAt } from './bands.js';
 import { THINGS, thingByKey } from './things.js';
-import { spectral, css, VISIBLE } from './colour.js';
+import { spectral, css, VISIBLE, blackbody as glowColour } from './colour.js';
 import { moleculeViewer, siblingApp } from './links.js';
 import { Ribbon } from './ribbon.js';
 import { WaveView, waveColour } from './wave.js';
@@ -150,9 +150,9 @@ function details() {
   const tones = tone.on ? octaveDown(P.frequency(m)).octaves : '';
   // Through the air rebuilds only for a new telescope; what is under the dial is patched in place by airLive.
   const key = v === 'air' ? [v, !!airMod, state.scope?.name, tones].join('|')
-    : [v, state.vis, band.key, state.thing?.key, v === 'blackbody' ? Math.round(state.kelvin) : '', effectAt(ev).ev, tones, state.sky?.key, sky?.current?.file, state.mode, field?.polar].join('|');
+    : [v, state.vis, band.key, state.thing?.key, v === 'blackbody' ? bbPreset()?.key ?? 'other' : '', effectAt(ev).ev, tones, state.sky?.key, sky?.current?.file, state.mode, field?.polar].join('|');
   // The fields and photons notes quote numbers for the exact wavelength; those change without moving the reader.
-  const numbers = v === 'spectrum' && state.mode !== 'wave' ? fmt.length(m) : '';
+  const numbers = v === 'spectrum' && state.mode !== 'wave' ? fmt.length(m) : v === 'blackbody' ? Math.round(state.kelvin) : '';
   if (key + numbers === detailsKey + detailsNumbers) { if (v === 'air') airLive(m); return; }
   const keepScroll = key === detailsKey;
   detailsKey = key; detailsNumbers = numbers;
@@ -165,9 +165,10 @@ function details() {
     if (state.vis === 'eyes') html += ANIMALS.map(a => `<h3>${esc(a.animal)}</h3><p>${esc(a.note)}</p>`).join('') + `<h3>In Molecule Viewer</h3><ul class="links"><li><a href="${moleculeViewer('retinal')}" target="_blank" rel="noopener">Retinal, the molecule in every cone</a></li></ul>`;
     if (state.vis === 'sunlight') html += sunShares();
   } else if (v === 'blackbody') {
-    const k = state.kelvin, pk = P.wienPeak(k), preset = PRESETS.find(p => Math.abs(Math.log(p.k / k)) < 0.01);
+    const k = state.kelvin, pk = P.wienPeak(k), preset = bbPreset();
     html += `<h2>${preset ? esc(preset.name) : 'A blackbody'}</h2><p class="big">${fmt.kelvin(k)} · peak ${fmt.length(pk)} (${esc(bandAt(pk).name.toLowerCase())})</p><p>${esc(glowText(k))}</p>`;
     if (preset?.about) html += `<p>${esc(preset.about)}</p>`;
+    html += `<h3>Examples</h3><ul class="things examples">${PRESETS.map(p => `<li><a href="#blackbody-${p.key}"${p === preset ? ' aria-current="true"' : ''}><span><i class="swatch" style="${swatch(p.k)}"></i>${esc(p.name)}</span><small>${fmt.kelvin(p.k)}</small></a></li>`).join('')}</ul>`;
     const sh = bbShares(k), pct = x => (x * 100 >= 99.95 ? 'all' : x * 100 < 0.01 ? '<0.01%' : `${fmt.sig(x * 100, 2)}%`);
     html += `<h3>Where its power goes</h3><ul class="shares">${[['Infrared and longer', sh.infrared], ['Visible', sh.visible], ['Ultraviolet', sh.ultraviolet], ['X-rays and shorter', sh.xray]].map(([n, x]) => `<li><span>${n}</span><span class="bar" style="--w:${(x * 100).toFixed(2)}%"></span><b>${pct(x)}</b></li>`).join('')}</ul>`;
     html += `<h3>How much</h3><p>Each square metre of its surface gives out ${watts(P.exitance(k))}. Double the temperature and it gives out 16 times as much (the Stefan–Boltzmann law): that is why a little more heat makes a filament so much brighter.</p>`;
@@ -309,12 +310,14 @@ function setVis(v) {
   detailsKey = '';
   details();
 }
+const bbPreset = () => PRESETS.find(p => Math.abs(Math.log(p.k / state.kelvin)) < 0.01);
+// The colour each example glows; things too cool to glow visibly get an empty ring.
+const swatch = k => (k < 700 ? '' : `background:${css(glowColour(k).rgb)}`);
 function setKelvin(k) {
   state.kelvin = Math.min(T_MAX, Math.max(T_MIN, k));
   bb.kelvin = state.kelvin;
   $('#tempSlider').value = Math.round((1000 * Math.log(state.kelvin / T_MIN)) / Math.log(T_MAX / T_MIN));
-  const p = PRESETS.find(p => Math.abs(Math.log(p.k / state.kelvin)) < 0.01);
-  $('#tempPreset').value = p ? p.key : '';
+  $('#tempPreset').value = bbPreset()?.key ?? '';
   if (state.view === 'blackbody') ribbon.setOverlays([bbOverlay(state.kelvin)]);
   details();
 }
