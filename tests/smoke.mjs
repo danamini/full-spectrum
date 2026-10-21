@@ -27,6 +27,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH 
 
 let failures = 0;
 async function test(name, fn, { viewport = { width: 1440, height: 900 }, mobile = false, timeout = false } = {}) {
+  if (process.env.ONLY && !name.includes(process.env.ONLY)) return; // ONLY=air npm test runs just the matching tests
   const ctx = await browser.newContext({ viewport, isMobile: mobile, hasTouch: mobile });
   const page = await ctx.newPage();
   if (timeout) page.setDefaultTimeout(0);
@@ -142,6 +143,15 @@ await test('through the air and the sky', async page => {
   await page.click('#details [data-scope="ALMA"]'); await wait(page, 1500);
   const scope = await page.evaluate(() => [document.querySelector('#details .scope .known')?.textContent, spectrum.ribbon.metres]);
   expect(scope[0]?.startsWith('ALMA') && scope[1] < 3.6e-3 && scope[1] > 0.32e-3, `ALMA card and tuning: ${scope}`);
+  // Moving the dial patches what is under it in place: the panel is not rebuilt and does not jump.
+  const steady = await page.evaluate(async () => {
+    const d = document.querySelector('#details'), list = d.querySelector('.scopes');
+    d.scrollTop = 200; const top = d.scrollTop, seen = new Set();
+    spectrum.ribbon.tune(1e-9, spectrum.ribbon.span, 900);
+    for (let i = 0; i < 40; i++) { await new Promise(r => setTimeout(r, 30)); seen.add(d.querySelector('.air-here h3')?.textContent); }
+    return { same: d.querySelector('.scopes') === list, top, now: d.scrollTop, absorbers: seen.size };
+  });
+  expect(steady.same && steady.now === steady.top && steady.absorbers > 2, `air panel rebuilt or jumped while tuning: ${JSON.stringify(steady)}`);
   for (const k of ['milkyway', 'sun', 'crab']) {
     await go(page, `sky-${k}`, 2600);
     expect((await app(page)).view === 'sky', `sky-${k}`);

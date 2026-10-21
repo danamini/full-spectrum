@@ -147,10 +147,13 @@ let detailsKey = '', detailsNumbers = '';
 function details() {
   const m = ribbon.metres, band = bandAt(m), sub = subAt(m), ev = P.photonEnergyEV(m);
   const v = state.view;
-  const key = [v, v === 'air' && airMod ? `${airMod.absorberAt(m).title}|${airMod.windowAt(m)?.name}|${state.scope?.name}|${airCovering(m).map(t => t.name)}` : '', state.vis, band.key, state.thing?.key, v === 'blackbody' ? Math.round(state.kelvin) : '', effectAt(ev).ev, tone.on ? octaveDown(P.frequency(m)).octaves : '', state.sky?.key, sky?.current?.file, state.mode, field?.polar].join('|');
+  const tones = tone.on ? octaveDown(P.frequency(m)).octaves : '';
+  // Through the air rebuilds only for a new telescope; what is under the dial is patched in place by airLive.
+  const key = v === 'air' ? [v, !!airMod, state.scope?.name, tones].join('|')
+    : [v, state.vis, band.key, state.thing?.key, v === 'blackbody' ? Math.round(state.kelvin) : '', effectAt(ev).ev, tones, state.sky?.key, sky?.current?.file, state.mode, field?.polar].join('|');
   // The fields and photons notes quote numbers for the exact wavelength; those change without moving the reader.
-  const numbers = (v === 'spectrum' && state.mode !== 'wave') || v === 'air' ? fmt.length(m) : '';
-  if (key + numbers === detailsKey + detailsNumbers) return;
+  const numbers = v === 'spectrum' && state.mode !== 'wave' ? fmt.length(m) : '';
+  if (key + numbers === detailsKey + detailsNumbers) { if (v === 'air') airLive(m); return; }
   const keepScroll = key === detailsKey;
   detailsKey = key; detailsNumbers = numbers;
   let html = '';
@@ -172,7 +175,7 @@ function details() {
     html += `<p>Everything glows with a spectrum set by its temperature. Hotter things glow brighter at every wavelength, and their peak moves to shorter waves: double the temperature, halve the peak's wavelength (Wien's law). The orange line on the spectrum below is this curve.</p>`;
     html += `<p class="note">The curves are Planck's law for a perfect absorber and emitter. Real surfaces give out somewhat less, but the shape and the peak hold.</p>`;
   } else if (v === 'air' && airMod) {
-    html += airDetails(m);
+    html += airDetails();
   } else if (v === 'sky' && state.sky) {
     const o = state.sky, cur = sky?.current;
     html += `<h2>${esc(o.name)}</h2><p>${esc(o.note ?? '')}</p>`;
@@ -205,6 +208,8 @@ function details() {
   const top = d.scrollTop;
   d.innerHTML = html;
   d.scrollTop = keepScroll ? top : 0;
+  airShown = '';
+  if (v === 'air') airLive(m);
 }
 
 // Through the air: what happens at the cursor, the chosen telescope, every telescope, and why it matters.
@@ -216,19 +221,36 @@ function rangeText(a, b) {
   return `${fmt.length(long)} to ${fmt.length(short)}`;
 }
 const airCovering = m => (airMod ? airMod.TELESCOPES.filter(t => m <= t.from && m >= t.to) : []);
-function airDetails(m) {
-  const { absorberAt, windowAt, transmission, TELESCOPES } = airMod;
-  const pct = transmission(m) * 100, a = absorberAt(m), w = windowAt(m), here = airCovering(m), sc = state.scope;
+// The part that follows the dial: how much gets through, the window, what absorbs it, which telescopes work.
+let airShown = '';
+function airLive(m) {
+  const d = $('#details'), el = d.querySelector('.air-here');
+  if (!el || !airMod) return;
+  const { absorberAt, windowAt, transmission } = airMod;
+  const pct = transmission(m) * 100, a = absorberAt(m), w = windowAt(m);
   const reach = pct >= 99.5 ? 'almost all of it reaches the ground' : pct < 0.5 ? 'none of it reaches the ground' : `about ${fmt.sig(pct, 2)}% reaches the ground`;
-  const where = t => (t.where === 'space' ? 'in space' : 'on the ground');
-  let html = `<h2>Through the air</h2><p class="big">At ${fmt.length(m)}, ${reach}.</p>`;
+  let html = `<p class="big">At ${fmt.length(m)}, ${reach}.</p>`;
   if (w) html += `<p>Inside the <strong>${esc(w.name)}</strong>. ${esc(w.note)}</p>`;
   html += `<h3>${esc(a.title)}</h3><p>${esc(a.text)}</p>`;
+  if (html === airShown) return;
+  airShown = html;
+  el.innerHTML = html;
+  const here = airCovering(m);
+  for (const b of d.querySelectorAll('[data-scope]')) {
+    const t = airMod.TELESCOPES.find(x => x.name === b.dataset.scope), s = b.querySelector('small');
+    const text = `${here.includes(t) ? 'works here · ' : ''}${airWhere(t)}`;
+    if (s.textContent !== text) s.textContent = text;
+  }
+}
+const airWhere = t => (t.where === 'space' ? 'in space' : 'on the ground');
+function airDetails() {
+  const sc = state.scope, where = airWhere;
+  let html = `<h2>Through the air</h2><div class="air-here"></div>`;
   if (sc) {
     html += `<div class="thing scope"><p class="known">${esc(sc.name)} <small>${where(sc)}</small></p><p class="range">${rangeText(sc.from, sc.to)}</p>`;
     html += `<h3>Where</h3><p>${esc(sc.place)}</p><h3>The telescope</h3><p>${esc(sc.size)} ${esc(sc.years)}</p><h3>What it does</h3><p>${esc(sc.story)}</p><h3>Why there</h3><p>${esc(sc.why)}</p></div>`;
   }
-  html += `<h3>Telescopes</h3><ul class="things pictures scopes">${TELESCOPES.map(t => `<li><button type="button" data-scope="${esc(t.name)}"${t === sc ? ' aria-current="true"' : ''}><span>${esc(t.name)}<small>${here.includes(t) ? 'works here · ' : ''}${where(t)}</small></span><span class="short">${esc(t.note)}</span></button></li>`).join('')}</ul>`;
+  html += `<h3>Telescopes</h3><ul class="things pictures scopes">${airMod.TELESCOPES.map(t => `<li><button type="button" data-scope="${esc(t.name)}"${t === sc ? ' aria-current="true"' : ''}><span>${esc(t.name)}<small>${where(t)}</small></span><span class="short">${esc(t.note)}</span></button></li>`).join('')}</ul>`;
   html += `<h3>Why it matters</h3><p>The air is clear in two wide windows: visible light, with a little infrared and ultraviolet either side, and radio from about a centimetre to a few tens of metres. Everything else is absorbed somewhere on the way down, and that shapes life, climate and astronomy.</p>`;
   html += `<p><strong>Life:</strong> ozone and oxygen take out the ultraviolet that breaks DNA. The visible window is where the Sun is brightest, and it is the light eyes evolved to see and plants to use.</p>`;
   html += `<p><strong>Climate:</strong> sunlight comes in through the visible window; the Earth's heat goes out as infrared, much of it through the window near 10 µm. Water vapour and carbon dioxide absorb the infrared either side and send some back down. That greenhouse effect keeps the Earth about 33 °C warmer than it would otherwise be, and more carbon dioxide strengthens it.</p>`;
