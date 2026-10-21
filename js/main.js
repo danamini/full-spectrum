@@ -90,7 +90,9 @@ function changed(metres) {
   readout(metres);
   details();
   clearTimeout(hashTimer);
-  if (!state.landing && state.view === 'spectrum' && !state.thing && !state.journey) hashTimer = setTimeout(() => setHash(addressFor(metres)), 400);
+  // Only if nothing else has changed the address meanwhile: a new address arriving inside the 400 ms must win.
+  const was = location.hash;
+  if (!state.landing && state.view === 'spectrum' && !state.thing && !state.journey) hashTimer = setTimeout(() => location.hash === was && setHash(addressFor(metres)), 400);
 }
 
 // "#nm-550", "#ghz-2.45", "#kev-511": the unit the number reads best in.
@@ -134,7 +136,7 @@ let detailsKey = '';
 function details() {
   const m = ribbon.metres, band = bandAt(m), sub = subAt(m), ev = P.photonEnergyEV(m);
   const v = state.view;
-  const key = [v, state.vis, band.key, state.thing?.key, v === 'blackbody' ? Math.round(state.kelvin) : '', effectAt(ev).ev, tone.on ? octaveDown(P.frequency(m)).octaves : '', state.sky?.key, state.mode].join('|');
+  const key = [v, state.vis, band.key, state.thing?.key, v === 'blackbody' ? Math.round(state.kelvin) : '', effectAt(ev).ev, tone.on ? octaveDown(P.frequency(m)).octaves : '', state.sky?.key, sky?.current?.file, state.mode].join('|');
   if (key === detailsKey) return;
   detailsKey = key;
   let html = '';
@@ -152,7 +154,14 @@ function details() {
   } else if (v === 'air') {
     html += `<h2>Through the air</h2><p>The atmosphere is clear in two main windows: visible light, with a little infrared and ultraviolet either side, and radio from about a centimetre to about ten metres. Ozone soaks up ultraviolet, oxygen and nitrogen stop X-rays and gamma rays, water vapour and carbon dioxide absorb much of the infrared, and the ionosphere turns back the longest radio waves.</p><p>So radio and optical telescopes can sit on mountains; almost everything else has to go to space.</p><p class="note">Hover the chart for the windows and telescopes. The shaded curtain on the spectrum below is the air's opacity.</p>`;
   } else if (v === 'sky' && state.sky) {
-    html += `<h2>${esc(state.sky.name)}</h2><p>${esc(state.sky.note ?? '')}</p><p>Each picture shows the same object in a different light: different matter, at different temperatures, shines in each. Tune the spectrum below, or pick a picture.</p><p class="note">Pictures in light we cannot see are given false colours.</p>`;
+    const o = state.sky, cur = sky?.current;
+    html += `<h2>${esc(o.name)}</h2><p>${esc(o.note ?? '')}</p>`;
+    if (cur) {
+      html += `<div class="thing"><p class="known">${esc(cur.label)}</p><p class="range">${fmt.length(cur.metres)} · ${fmt.frequency(P.frequency(cur.metres))} · ${fmt.energy(P.photonEnergyEV(cur.metres))}</p>`;
+      html += `<h3>What you are seeing</h3><p>${esc(cur.seeing)}</p><h3>The colours</h3><p>${esc(cur.colours)}</p><h3>Taken from</h3><p>${esc(cur.where)}</p></div>`;
+    }
+    html += `<h3>Every picture</h3><ul class="things pictures">${o.images.map((im, i) => `<li><button type="button" data-picture="${i}"${im === cur ? ' aria-current="true"' : ''}><span>${esc(bandAt(im.metres).name)}<small>${fmt.length(im.metres)}</small></span><span class="short">${esc(im.short)}</span></button></li>`).join('')}</ul>`;
+    html += `<p class="note">Each picture shows the same object in a different light: different matter, at different temperatures, shines in each. Tune the spectrum below, or pick a picture. Pictures in light we cannot see are given false colours.</p>`;
     const st = state.sky.key === 'sun' && siblingApp('#sun');
     if (st) html += `<ul class="links"><li><a href="${st}" target="_blank" rel="noopener">The Sun in a sibling app</a></li></ul>`;
   } else {
@@ -183,6 +192,11 @@ const SUN_SHARES = (() => {
   return `Above the air, the Sun's light from 280 nm to 4 µm is ${pc(uv)} ultraviolet, ${pc(visible)} visible and ${pc(ir)} infrared by energy: ${Math.round(tot)} W on each square metre.`;
 })();
 const sunShares = () => `<p>${SUN_SHARES}</p>`;
+
+$('#details').addEventListener('click', e => {
+  const b = e.target.closest('[data-picture]');
+  if (b && state.sky) ribbon.tune(state.sky.images[+b.dataset.picture].metres, ribbon.span, 900);
+});
 
 // ---------------------------------------------------------------- switching views
 function setView(v) {
@@ -286,8 +300,8 @@ async function go(key, { from = 'user' } = {}) {
     state.sky = obj;
     s.setObject(obj.key);
     $$('#skyTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.sky === obj.key ? 'true' : 'false'));
-    setView('sky');
     s.set(ribbon.metres);
+    setView('sky');
     const ms = obj.images.map(i => i.metres);
     const lo = Math.min(...ms), hi = Math.max(...ms);
     const span = Math.log10(hi / lo) * 1.3 + 1;

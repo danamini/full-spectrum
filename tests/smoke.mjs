@@ -141,8 +141,15 @@ await test('through the air and the sky', async page => {
     expect((await app(page)).view === 'sky', `sky-${k}`);
     const loaded = await page.evaluate(() => [...document.querySelectorAll('#skyHost img')].filter(i => i.src && i.complete && i.naturalWidth === 0).map(i => i.src));
     expect(!loaded.length, `broken images: ${loaded.join(', ')}`);
+    const panel = await page.evaluate(() => [document.querySelector('#details .thing .known')?.textContent, document.querySelector('.sky-stage img.on')?.alt, document.querySelectorAll('#details [data-picture]').length]);
+    expect(panel[0] && panel[1]?.endsWith(panel[0]), `sky-${k} panel describes "${panel[0]}" but shows "${panel[1]}"`);
+    expect(panel[2] > 0, `sky-${k} picture list`);
   }
   await page.click('.sky-strip button:last-child'); await wait(page, 1500);
+  // Picking from the panel's list tunes to that picture and describes it.
+  await page.click('#details [data-picture="0"]'); await wait(page, 1800);
+  const first = await page.evaluate(() => [document.querySelector('#details .thing .known')?.textContent, spectrum.state.sky.images[0].label]);
+  expect(first[0] === first[1], `picked the first picture, panel shows "${first[0]}"`);
 });
 
 await test('journey, tour, surprise and the keyboard', async page => {
