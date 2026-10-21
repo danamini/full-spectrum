@@ -1,0 +1,12 @@
+{
+  "key": "oven",
+  "title": "Opened oven seen with thermal camera",
+  "author": "Laserlicht",
+  "licence": "CC BY-SA 4.0",
+  "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Opened_oven_seen_with_thermal_camera.jpg",
+  "site": "Wikimedia Commons",
+  "note": "in infrared",
+  "changes": "cropped to 320 x 200 and saved as WebP",
+  "fetched": "2026-10-21"
+}

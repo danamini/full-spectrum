@@ -1,0 +1,12 @@
+{
+  "key": "cmb",
+  "title": "Cosmic Microwave Background (CMB)",
+  "author": "ESA and the Planck Collaboration",
+  "licence": "CC BY 4.0",
+  "licenceUrl": "https://creativecommons.org/licenses/by/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Cosmic_Microwave_Background_(CMB).jpeg",
+  "site": "Wikimedia Commons",
+  "note": "the Planck map of the whole sky",
+  "changes": "cropped to 320 x 200 and saved as WebP",
+  "fetched": "2026-10-21"
+}

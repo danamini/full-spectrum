@@ -139,7 +139,9 @@ await test('visible light views', async page => {
 await test('hot things: presets and slider', async page => {
   await go(page, 'blackbody-sun');
   expect(near(await page.evaluate(() => spectrum.state.kelvin), 5772, 0.001), 'sun preset');
-  await page.selectOption('#tempPreset', 'lava'); await wait(page, 1500);
+  await page.click('#bbExamples [data-preset="lava"]'); await wait(page, 1500);
+  expect(await page.locator('#bbExamples [aria-pressed="true"]').getAttribute('data-preset') === 'lava', 'lava tile not marked');
+  expect(await page.locator('#bbExamples img').count() === 11, 'not every example has a picture');
   expect(near(await page.evaluate(() => spectrum.state.kelvin), 1400, 0.001), 'lava preset');
   await page.fill('#tempSlider', '100'); await wait(page, 300);
   const k = await page.evaluate(() => spectrum.state.kelvin);

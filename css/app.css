@@ -177,8 +177,6 @@ button.stage.unseen::after { content: ''; position: absolute; top: -3px; right: 
 .details .things a { display: flex; justify-content: space-between; gap: 10px; padding: 4px 8px; margin: 0 -8px; border-radius: 8px; color: var(--text); text-decoration: none; }
 .details .things a:hover { background: rgba(255, 255, 255, 0.04); }
 .details .things a[aria-current="true"] { background: rgba(242, 180, 90, 0.12); }
-.details .examples a > span { display: flex; align-items: center; gap: 8px; }
-.details .swatch { flex: none; width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--rule-strong); }
 .details .things small { color: var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .details .pictures button { display: block; width: calc(100% + 16px); text-align: left; padding: 6px 8px; margin: 0 -8px; border: 0; border-radius: 8px; background: none; cursor: pointer; }
 .details .pictures button:hover { background: rgba(255, 255, 255, 0.04); }
@@ -203,25 +201,17 @@ body[data-view="sky"] .controls [data-for="sky"] { display: flex; }
 .bb { align-items: center; gap: 14px; }
 .slider { display: flex; align-items: center; gap: 10px; color: var(--dim); }
 .slider input { width: clamp(160px, 26vw, 380px); accent-color: var(--amber); }
-.bb select { appearance: none; -webkit-appearance: none; cursor: pointer; padding: 6px 34px 6px 14px; border-radius: 18px;
-  border: 1px solid var(--rule); color: var(--text); background: var(--glass) no-repeat right 12px center / 12px 12px
-  url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%238b96aa' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>"); }
-.bb select:hover { border-color: var(--rule-strong); }
-.bb select:focus-visible { outline: none; border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
-.bb select option { background: #0b1020; color: var(--text); }
-.bb select option:checked { background: var(--amber); color: var(--amber-ink); }
-/* Where the browser lets the open list be styled too (Chromium 135+), it becomes a glass panel like the rest. */
-@supports (appearance: base-select) {
-  .bb select, .bb select::picker(select) { appearance: base-select; }
-  .bb select::picker-icon { display: none; }
-  .bb select::picker(select) { margin-top: 6px; padding: 6px; border: 1px solid var(--rule-strong); border-radius: 14px;
-    background: var(--glass-strong); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-    max-height: 60vh; overflow-y: auto; }
-  .bb select option { background: none; padding: 6px 12px; border-radius: 9px; cursor: pointer; }
-  .bb select option::checkmark { display: none; }
-  .bb select option:hover, .bb select option:focus-visible { background: rgba(160, 180, 220, 0.12); outline: none; }
-  .bb select option:checked { background: var(--amber); color: var(--amber-ink); }
-}
+/* The examples: a row of picture tiles, coolest to hottest, the current one outlined. */
+.bb-examples { position: absolute; display: none; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; scroll-snap-type: x proximity; }
+body[data-view="blackbody"] .bb-examples { display: flex !important; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); }
+.bb-examples button { flex: none; width: 116px; padding: 0 0 7px; border: 1px solid var(--rule); border-radius: 12px; background: var(--glass);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); color: var(--dim); text-align: left; cursor: pointer; overflow: hidden; scroll-snap-align: start; }
+.bb-examples button:hover { border-color: var(--rule-strong); color: var(--text); }
+.bb-examples button[aria-pressed="true"] { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); color: var(--text); }
+.bb-examples img { display: block; width: 100%; height: 66px; object-fit: cover; background: #000; }
+.bb-examples .t-name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; margin: 6px 9px 2px; font-size: 12px; line-height: 1.3; }
+.bb-examples .t-k { display: flex; align-items: center; gap: 6px; margin: 0 9px; font-size: 11.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.bb-examples .swatch, .details .swatch { flex: none; width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--rule-strong); }
 .hint { margin-left: auto; color: var(--faint); font-size: 12px; text-align: right; }
 .dial { position: fixed; z-index: 5; left: 0; right: 0; bottom: 0; padding-bottom: env(safe-area-inset-bottom);
   background: linear-gradient(to top, var(--ink) 75%, rgba(3, 5, 11, 0)); }

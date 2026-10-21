@@ -25,6 +25,7 @@
     <canvas id="waveCanvas" class="view-canvas" data-for="spectrum"></canvas>
     <p class="wave-credit" id="waveCredit" data-for="spectrum"></p>
     <div class="photon-facts" id="photonFacts" data-for="spectrum"></div>
+    <div class="bb-examples" id="bbExamples" data-for="blackbody" role="group" aria-label="Examples"></div>
     <div id="fieldHost" class="view-host" data-for="field" aria-label="3D view of the electric and magnetic fields. Drag to turn."></div>
     <div class="field-labels" data-for="field" aria-hidden="true">
       <span class="lab-e"><b>Electric field</b><small>pushes on charges</small></span>
@@ -105,7 +106,6 @@
     </div>
     <div class="bb" data-for="blackbody">
       <label class="slider"><span>Temperature</span><input id="tempSlider" type="range" min="0" max="1000" step="1" aria-label="Temperature"></label>
-      <select id="tempPreset" aria-label="Examples"></select>
     </div>
     <div class="seg" data-for="sky" role="group" aria-label="Object" id="skyTabs"></div>
     <span class="hint" id="hint">Drag the spectrum or scroll to tune · scroll with ctrl or pinch to zoom</span>

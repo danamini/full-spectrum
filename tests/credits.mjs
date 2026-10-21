@@ -16,5 +16,18 @@ for (const [key, m] of Object.entries(MODELS)) {
   check(!/NC|ND/.test(m.licence), `${key}: licence ${m.licence} forbids commercial use or changes`);
   check(doc.includes(m.source) && doc.includes(m.author), `${key}: not credited in docs/credits-models.md`);
 }
+// Every Hot things example has its picture, credited in the app's data and in docs/credits-examples.md.
+const { PRESETS } = await import('../js/blackbody.js');
+const { EXAMPLE_PICTURES } = await import('../data/examples.js');
+const exDoc = await readFile(`${ROOT}docs/credits-examples.md`, 'utf8');
+for (const p of PRESETS) {
+  const pic = EXAMPLE_PICTURES[p.key];
+  check(pic && existsSync(ROOT + pic.file), `${p.key}: no picture`);
+  if (pic) {
+    check(pic.author && pic.licence && pic.source, `${p.key}: picture without author, licence or source`);
+    check(!/NC|ND/.test(pic.licence), `${p.key}: picture licence ${pic.licence}`);
+    check(exDoc.includes(pic.source), `${p.key}: picture not in docs/credits-examples.md`);
+  }
+}
 console.log(failures ? `${failures} credit problems` : `  ok    credits for ${Object.keys(MODELS).length} models`);
 process.exitCode = failures ? 1 : 0;

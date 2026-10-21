@@ -13,6 +13,7 @@
         {"kind": "new", "text": "Links into Solar Timeline: fly round the Sun from the sky view and from Hot things, and round Jupiter, Neptune, the Earth and the Moon from the wave view", "go": "#sky-sun"},
         {"kind": "better", "text": "The proton is Molecule Viewer's: three quarks trading colour, the gluon strings between them, and a sea of quark-antiquark pairs flickering in and out", "go": "#fm-1.57"},
         {"kind": "better", "text": "Photons: cards under the beam with what one photon carries and can do, how many a beam holds each second, the push of light, and, for visible light, how few your eye can see", "go": "#nm-534"},
+        {"kind": "better", "text": "Hot things: the examples are a row of pictures under the chart, from the cosmic microwave background to the Sun's corona, each with its temperature and the colour it glows, credited", "go": "#blackbody-lava"},
         {"kind": "fix", "text": "Fields in 3D could come up blank after the tour, or after quick clicks, with only the labels showing", "go": "#thing-fm"},
         {"kind": "fix", "text": "The 3D model's credit no longer shows over Fields in 3D"}
       ]

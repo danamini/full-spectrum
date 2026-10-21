@@ -1,0 +1,12 @@
+{
+  "key": "sun",
+  "title": "Visible light, 617 nm (SDO HMI)",
+  "author": "Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams. Rendered with Helioviewer.org.",
+  "licence": "SDO images are not copyrighted; non-commercial and educational use encouraged with attribution (SDO data rules)",
+  "licenceUrl": null,
+  "source": "https://sdo.gsfc.nasa.gov/data/rules.php",
+  "site": "the sky view",
+  "note": null,
+  "changes": "cropped to 320 x 200 and saved as WebP",
+  "fetched": "2026-10-21"
+}

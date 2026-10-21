@@ -16,6 +16,7 @@ import { SOLAR } from '../data/solar.js';
 import * as fmt from './format.js';
 import { fieldNotes, photonNotes, fieldCard, photonFacts } from './notes.js';
 import { MODELS } from '../data/models.js';
+import { EXAMPLE_PICTURES } from '../data/examples.js';
 import { OBJECTS } from './scale.js';
 import { initWhatsNew } from './whatsnew.js';
 
@@ -83,7 +84,11 @@ function layout() {
   const bottom = $('#controls').getBoundingClientRect().top - 8;
   const left = phone ? 12 : 24;
   const rect = { x: left, y: top, w: Math.max(100, right - left), h: Math.max(120, bottom - top) };
-  for (const v of [wave, vis, bb, air]) if (v) v.rect = rect;
+  for (const v of [wave, vis, air]) if (v) v.rect = rect;
+  // Hot things: the example tiles take a row at the bottom of the picture, and the chart the rest.
+  const strip = 132;
+  bb.rect = { ...rect, h: Math.max(120, rect.h - strip - 8) };
+  Object.assign($('#bbExamples').style, { left: `${rect.x}px`, width: `${rect.w}px`, top: `${rect.y + rect.h - strip}px` });
   const fh = $('#fieldHost');
   Object.assign(fh.style, { left: `${rect.x}px`, top: `${rect.y}px`, width: `${rect.w}px`, height: `${rect.h}px` });
   Object.assign($('#waveCredit').style, { left: `${rect.x}px`, width: `${rect.w}px`, top: `${rect.y + rect.h - 34}px` });
@@ -176,7 +181,8 @@ function details() {
     html += `<h2>${preset ? esc(preset.name) : 'A blackbody'}</h2><p class="big">${fmt.kelvin(k)} · peak ${fmt.length(pk)} (${esc(bandAt(pk).name.toLowerCase())})</p><p>${esc(glowText(k))}</p>`;
     if (preset?.about) html += `<p>${esc(preset.about)}</p>`;
     if (preset?.key === 'sun' || preset?.key === 'corona') html += inSolarTimeline('sun', 'The Sun in 3D, in Solar Timeline');
-    html += `<h3>Examples</h3><ul class="things examples">${PRESETS.map(p => `<li><a href="#blackbody-${p.key}"${p === preset ? ' aria-current="true"' : ''}><span><i class="swatch" style="${swatch(p.k)}"></i>${esc(p.name)}</span><small>${fmt.kelvin(p.k)}</small></a></li>`).join('')}</ul>`;
+    const pic = preset && EXAMPLE_PICTURES[preset.key];
+    if (pic) html += `<p class="note">Picture${pic.note ? `, ${esc(pic.note)}` : ''}: <a href="${esc(pic.source)}" target="_blank" rel="noopener">${esc(pic.title)}</a> by ${esc(pic.author)} · ${pic.licenceUrl ? `<a href="${esc(pic.licenceUrl)}" target="_blank" rel="noopener">${esc(pic.licence)}</a>` : esc(pic.licence)}. <a href="https://github.com/danamini/full-spectrum/blob/main/docs/credits-examples.md" target="_blank" rel="noopener">Every picture's credit</a>.</p>`;
     const sh = bbShares(k), pct = x => (x * 100 >= 99.95 ? 'all' : x * 100 < 0.01 ? '<0.01%' : `${fmt.sig(x * 100, 2)}%`);
     html += `<h3>Where its power goes</h3><ul class="shares">${[['Infrared and longer', sh.infrared], ['Visible', sh.visible], ['Ultraviolet', sh.ultraviolet], ['X-rays and shorter', sh.xray]].map(([n, x]) => `<li><span>${n}</span><span class="bar" style="--w:${(x * 100).toFixed(2)}%"></span><b>${pct(x)}</b></li>`).join('')}</ul>`;
     html += `<h3>How much</h3><p>Each square metre of its surface gives out ${watts(P.exitance(k))}. Double the temperature and it gives out 16 times as much (the Stefan–Boltzmann law): that is why a little more heat makes a filament so much brighter.</p>`;
@@ -324,7 +330,12 @@ function setKelvin(k) {
   state.kelvin = Math.min(T_MAX, Math.max(T_MIN, k));
   bb.kelvin = state.kelvin;
   $('#tempSlider').value = Math.round((1000 * Math.log(state.kelvin / T_MIN)) / Math.log(T_MAX / T_MIN));
-  $('#tempPreset').value = bbPreset()?.key ?? '';
+  const current = bbPreset()?.key;
+  $$('#bbExamples button').forEach(b => {
+    const on = b.dataset.preset === current;
+    if (on && b.getAttribute('aria-pressed') !== 'true') b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    b.setAttribute('aria-pressed', String(on));
+  });
   if (state.view === 'blackbody') ribbon.setOverlays([bbOverlay(state.kelvin)]);
   details();
 }
@@ -338,8 +349,8 @@ async function setPolar(polar) {
 }
 $$('[data-polar]').forEach(b => b.addEventListener('click', () => setPolar(b.dataset.polar)));
 $$('[data-vis]').forEach(b => b.addEventListener('click', () => go(b.dataset.vis)));
-$('#tempPreset').innerHTML = `<option value="">Examples…</option>${PRESETS.map(p => `<option value="${p.key}">${esc(p.name)} · ${fmt.kelvin(p.k)}</option>`).join('')}`;
-$('#tempPreset').addEventListener('change', e => { const p = PRESETS.find(p => p.key === e.target.value); if (p) go(`blackbody-${p.key}`); });
+$('#bbExamples').innerHTML = PRESETS.map(p => `<button type="button" data-preset="${p.key}" aria-pressed="false"><img src="${EXAMPLE_PICTURES[p.key]?.file ?? ''}" alt="" loading="lazy"><span class="t-name">${esc(p.name)}</span><span class="t-k"><i class="swatch" style="${swatch(p.k)}"></i>${fmt.kelvin(p.k)}</span></button>`).join('');
+$$('#bbExamples button').forEach(b => b.addEventListener('click', () => go(`blackbody-${b.dataset.preset}`)));
 $('#tempSlider').addEventListener('input', e => { setKelvin(T_MIN * (T_MAX / T_MIN) ** (e.target.value / 1000)); setHash(`blackbody-${Math.round(state.kelvin)}`); });
 
 // ---------------------------------------------------------------- routing
