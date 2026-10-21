@@ -4,7 +4,7 @@
   "type": "module",
   "description": "The whole electromagnetic spectrum, end to end: radio to gamma, with the real colours of light.",
   "scripts": {
-    "serve": "python3 -m http.server 8000",
+    "serve": "python3 -m http.server 8123",
     "test": "node tests/physics.mjs && node tests/smoke.mjs"
   },
   "devDependencies": {

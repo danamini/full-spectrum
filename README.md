@@ -52,10 +52,10 @@ what it does to matter.
 A static site with no build step. Serve the folder and open it:
 
 ```
-python3 -m http.server 8000
+python3 -m http.server 8123
 ```
 
-then go to http://localhost:8000. (Opening `index.html` straight from disk will not work: browsers block
+then go to http://localhost:8123. (Opening `index.html` straight from disk will not work: browsers block
 ES modules over `file://`.)
 
 ## Test it
