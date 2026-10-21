@@ -4,6 +4,17 @@
   "feedback": "https://github.com/danamini/full-spectrum/issues/new",
   "releases": [
     {
+      "version": "0.0.2",
+      "stage": "Alpha",
+      "status": "next",
+      "date": null,
+      "title": "Fixes",
+      "items": [
+        {"kind": "fix", "text": "Fields in 3D could come up blank after the tour, or after quick clicks, with only the labels showing", "go": "#thing-fm"},
+        {"kind": "fix", "text": "The 3D model's credit no longer shows over Fields in 3D"}
+      ]
+    },
+    {
       "version": "0.0.1",
       "stage": "Alpha",
       "status": "released",

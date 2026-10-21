@@ -176,6 +176,17 @@ await test('through the air and the sky', async page => {
   expect(first[0] === first[1], `picked the first picture, panel shows "${first[0]}"`);
 });
 
+// Asking for a 3D view twice before it has loaded (the tour sets the mode and the polarisation at once) built two
+// views, and the one that drew was pushed out of sight.
+await test('one 3D fields view, however it is asked for', async page => {
+  await page.goto(`${BASE}#thing-fm`); await wait(page, 800);
+  await page.evaluate(() => { document.querySelector('.seg [data-mode="field"]').click(); document.querySelector('[data-polar="circular"]').click(); });
+  await wait(page, 2500);
+  const s = await page.evaluate(() => ({ canvases: document.querySelectorAll('#fieldHost canvas').length, credit: getComputedStyle(document.querySelector('#waveCredit')).display }));
+  expect(s.canvases === 1, `${s.canvases} canvases in the fields view`);
+  expect(s.credit === 'none', 'the wave view\'s model credit shows over the fields');
+});
+
 await test("what's new: the version, the panel and every Show me", async page => {
   await page.goto(BASE); await wait(page, 1200);
   const badge = page.locator('header button.stage');

@@ -46,10 +46,13 @@ const bb = new BlackbodyView($('#bbCanvas'));
 let field = null, air = null, sky = null, airMod = null, fieldMod = null;
 const tone = new Tone();
 
-async function getField() {
-  if (!field) { fieldMod = await import('./field3d.js'); field = new fieldMod.FieldView($('#fieldHost')); field.setColour(waveColour(ribbon.metres).rgb); updateFieldCard(); }
+// The views that load on first use. Each loads once: callers that arrive while it is loading share the same
+// promise (two at once used to build two 3D views, and the one that drew was pushed out of sight).
+const once = make => { let p; return () => (p ??= make()); };
+const getField = once(async () => {
+  fieldMod = await import('./field3d.js'); field = new fieldMod.FieldView($('#fieldHost')); field.setColour(waveColour(ribbon.metres).rgb); updateFieldCard();
   return field;
-}
+});
 // The words on the 3D view: the wavelength under its bracket, and the card in the corner.
 function updateFieldCard() {
   if (!field) return;
@@ -58,20 +61,18 @@ function updateFieldCard() {
   $('#fieldLength').textContent = fmt.length(m);
   $('.field-labels').style.setProperty('--field-e', css(waveColour(m).rgb));
 }
-async function getAir() {
-  if (!air) { airMod = await import('./atmosphere.js'); air = new airMod.AirView($('#airCanvas')); layout(); detailsKey = ''; details(); }
+const getAir = once(async () => {
+  airMod = await import('./atmosphere.js'); air = new airMod.AirView($('#airCanvas')); layout(); detailsKey = ''; details();
   return air;
-}
-async function getSky() {
-  if (!sky) {
-    const mod = await import('./sky.js');
-    sky = new mod.SkyView($('#skyHost'), { onPick: im => ribbon.tune(im.metres, ribbon.span, 900) });
-    $('#skyTabs').innerHTML = mod.SKY.map(o => `<button type="button" data-sky="${o.key}" aria-pressed="false">${esc(o.name)}</button>`).join('');
-    $$('#skyTabs button').forEach(b => b.addEventListener('click', () => go(`sky-${b.dataset.sky}`)));
-    sky.objects = mod.SKY;
-  }
+});
+const getSky = once(async () => {
+  const mod = await import('./sky.js');
+  sky = new mod.SkyView($('#skyHost'), { onPick: im => ribbon.tune(im.metres, ribbon.span, 900) });
+  $('#skyTabs').innerHTML = mod.SKY.map(o => `<button type="button" data-sky="${o.key}" aria-pressed="false">${esc(o.name)}</button>`).join('');
+  $$('#skyTabs button').forEach(b => b.addEventListener('click', () => go(`sky-${b.dataset.sky}`)));
+  sky.objects = mod.SKY;
   return sky;
-}
+});
 
 // The rectangle the views may draw in: below the readout, left of the details panel, above the controls.
 function layout() {
