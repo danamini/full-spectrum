@@ -6,9 +6,11 @@ files are in `assets/models/`. The app names the model, its author and licence u
 one is shown.
 
 The other things in the wave view (the planets and Moon, Everest, the Burj Khalifa, the football pitch, the
-phone, the coin, the grain of sand, the hair, the blood cell, the bacterium, the viruses, the ribosome, haemoglobin, DNA, the water molecule,
+phone, the coin, the grain of sand, the hair, the blood cell, the water molecule,
 the hydrogen atom and the uranium nucleus) are modelled in code in `js/models3d.js`, with their textures
-drawn in code: they are this project's own. The proton is Molecule Viewer's (https://moleculeviewer.org), the same
+drawn in code: they are this project's own, as are the bacterium and the giant virus, built from beads in
+`js/micro.js`. Haemoglobin, DNA, the ribosome and the flu virus's spikes are real structures from the Protein Data
+Bank: see `docs/credits-molecules.md`. The proton is Molecule Viewer's (https://moleculeviewer.org), the same
 author's, MIT: its quarks, gluon flux tubes and sea of quark-antiquark pairs, in `js/nucleon.js`.
 
 - **ant**: [Ant](https://poly.pizza/m/2YvCk4p0xdH) by [Poly by Google](https://poly.pizza/u/Poly%20by%20Google), from Poly Pizza. Licence: [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). Changes: textures resized to at most 1024 px and saved as WebP; compressed. Fetched 2026-10-21.

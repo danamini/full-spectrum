@@ -2,6 +2,7 @@
 // fits beside the current wavelength so the scale can be felt, and shows its 3D model (models3d.js, by key).
 // Sizes: NASA planetary fact sheets; buildings and objects from their owners' published figures; cells and
 // molecules typical values; the proton's charge radius (CODATA 2018, 0.84 fm) doubled.
+// `pdb`: the Protein Data Bank structures its bead model is built from (data/molecules.js), credited under it.
 // `along`: a distance between two points; `tall`: measured up the screen (for a hair and DNA, their thickness).
 
 export const OBJECTS = [
@@ -27,10 +28,10 @@ export const OBJECTS = [
   { key: 'bloodCell', name: 'A red blood cell', m: 8e-6 },
   { key: 'bacterium', name: 'A bacterium', m: 2e-6 },
   { key: 'mimivirus', name: 'A giant virus (mimivirus)', m: 5e-7 },
-  { key: 'flu', name: 'A flu virus', m: 1e-7 },
-  { key: 'ribosome', name: 'A ribosome', m: 2.5e-8 },
-  { key: 'haemoglobin', name: 'A haemoglobin protein', m: 5.5e-9 },
-  { key: 'dna', name: 'The width of DNA', m: 2e-9, tall: true },
+  { key: 'flu', name: 'A flu virus', m: 1e-7, pdb: ['ha', 'na'] },
+  { key: 'ribosome', name: 'A ribosome', m: 2.5e-8, pdb: ['ribosome'] },
+  { key: 'haemoglobin', name: 'A haemoglobin protein', m: 5.5e-9, pdb: ['haemoglobin'] },
+  { key: 'dna', name: 'The width of DNA', m: 2e-9, tall: true, pdb: ['dna'] },
   { key: 'water', name: 'A water molecule', m: 2.8e-10 },
   { key: 'hydrogen', name: 'A hydrogen atom', m: 1.06e-10 },
   { key: 'uranium', name: 'A uranium nucleus', m: 1.5e-14 },

@@ -14,6 +14,7 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { build } from './models3d.js';
+import { VIEWPORT } from './beads.js';
 import { MODELS } from '../data/models.js';
 import { OBJECTS } from './scale.js';
 
@@ -171,6 +172,7 @@ export class WaveStage {
   }
 
   render(t) {
+    VIEWPORT.value = this.renderer.getDrawingBufferSize(this.bufferSize ??= new THREE.Vector2()).y;
     const m = this.current;
     if (m) {
       m.update(t, m.px, m.px * this.renderer.getPixelRatio() * this.camera.position.z);

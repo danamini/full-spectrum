@@ -1,0 +1,28 @@
+{
+  "key": "na",
+  "entry": "2HTY",
+  "what": "Influenza neuraminidase (N1, from H5N1), the enzyme that cuts new viruses free",
+  "title": "N1 neuraminidase",
+  "mode": "residues",
+  "beads": 1548,
+  "palette": [
+    "#7fd1b9",
+    "#c8e6a0"
+  ],
+  "size": [
+    106.9,
+    107.2,
+    58.7
+  ],
+  "citation": {
+    "authors": "Russell, R.J. et al.",
+    "year": 2006,
+    "title": "The structure of H5N1 avian influenza neuraminidase suggests new opportunities for drug design.",
+    "journal": "Nature",
+    "doi": "10.1038/nature05114"
+  },
+  "source": "https://www.rcsb.org/structure/2HTY",
+  "licence": "CC0 1.0",
+  "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "fetched": "2026-10-21"
+}

@@ -1,0 +1,32 @@
+{
+  "key": "dna",
+  "entry": "1BNA",
+  "what": "The Dickerson dodecamer: twelve base pairs of B-DNA, the first DNA structure solved to atomic detail",
+  "title": "STRUCTURE OF A B-DNA DODECAMER. CONFORMATION AND DYNAMICS",
+  "mode": "atoms",
+  "beads": 486,
+  "palette": [
+    "#5aa6e6",
+    "#c07ae0",
+    "#ff6b6b",
+    "#ffd166",
+    "#06d6a0",
+    "#4cc9f0"
+  ],
+  "size": [
+    25.5,
+    29.2,
+    45.7
+  ],
+  "citation": {
+    "authors": "Drew, H.R. et al.",
+    "year": 1981,
+    "title": "Structure of a B-DNA dodecamer: conformation and dynamics.",
+    "journal": "Proc.Natl.Acad.Sci.USA",
+    "doi": "10.1073/pnas.78.4.2179"
+  },
+  "source": "https://www.rcsb.org/structure/1BNA",
+  "licence": "CC0 1.0",
+  "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "fetched": "2026-10-21"
+}

@@ -1,0 +1,32 @@
+{
+  "key": "ribosome",
+  "entry": "7K00",
+  "what": "The E. coli ribosome, its two subunits of RNA and protein, which reads mRNA to build proteins",
+  "title": "Structure of the Bacterial Ribosome at 2 Angstrom Resolution",
+  "mode": "residues",
+  "beads": 10471,
+  "palette": [
+    "#f2c14e",
+    "#f28c28",
+    "#6b8fd6",
+    "#8a6bd6",
+    "#ff6b6b",
+    "#7cc4ff"
+  ],
+  "size": [
+    221,
+    250.6,
+    260.2
+  ],
+  "citation": {
+    "authors": "Watson, Z.L. et al.",
+    "year": 2020,
+    "title": "Structure of the bacterial ribosome at 2 angstrom resolution.",
+    "journal": "Elife",
+    "doi": "10.7554/eLife.60482"
+  },
+  "source": "https://www.rcsb.org/structure/7K00",
+  "licence": "CC0 1.0",
+  "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "fetched": "2026-10-21"
+}

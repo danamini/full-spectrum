@@ -16,6 +16,15 @@ for (const [key, m] of Object.entries(MODELS)) {
   check(!/NC|ND/.test(m.licence), `${key}: licence ${m.licence} forbids commercial use or changes`);
   check(doc.includes(m.source) && doc.includes(m.author), `${key}: not credited in docs/credits-models.md`);
 }
+// Every Protein Data Bank structure a model uses is built, cited and in docs/credits-molecules.md.
+const { MOLECULES } = await import('../data/molecules.js');
+const molDoc = await readFile(`${ROOT}docs/credits-molecules.md`, 'utf8');
+for (const o of OBJECTS) for (const k of o.pdb ?? []) {
+  const m = MOLECULES[k];
+  check(m && existsSync(ROOT + m.file), `${o.key}: structure ${k} not built`);
+  if (m) check(m.cite && m.source && m.licence && molDoc.includes(m.source), `${o.key}: structure ${k} not credited`);
+}
+
 // Every Hot things example has its picture, credited in the app's data and in docs/credits-examples.md.
 const { PRESETS } = await import('../js/blackbody.js');
 const { EXAMPLE_PICTURES } = await import('../data/examples.js');

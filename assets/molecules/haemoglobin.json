@@ -1,0 +1,30 @@
+{
+  "key": "haemoglobin",
+  "entry": "2HHB",
+  "what": "Human deoxyhaemoglobin: two alpha and two beta chains, each holding a haem",
+  "title": "THE CRYSTAL STRUCTURE OF HUMAN DEOXYHAEMOGLOBIN AT 1.74 ANGSTROMS RESOLUTION",
+  "mode": "atoms",
+  "beads": 4558,
+  "palette": [
+    "#e86f5c",
+    "#f2a37e",
+    "#5c0a14",
+    "#ff9a3c"
+  ],
+  "size": [
+    69.8,
+    60.2,
+    60.8
+  ],
+  "citation": {
+    "authors": "Fermi, G. et al.",
+    "year": 1984,
+    "title": "The crystal structure of human deoxyhaemoglobin at 1.74 A resolution",
+    "journal": "J.Mol.Biol.",
+    "doi": "10.1016/0022-2836(84)90472-8"
+  },
+  "source": "https://www.rcsb.org/structure/2HHB",
+  "licence": "CC0 1.0",
+  "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "fetched": "2026-10-21"
+}

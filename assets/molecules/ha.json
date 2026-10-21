@@ -1,0 +1,29 @@
+{
+  "key": "ha",
+  "entry": "3HMG",
+  "what": "Influenza haemagglutinin (H3), the spike that binds a cell and fuses with it",
+  "title": "REFINEMENT OF THE INFLUENZA VIRUS HEMAGGLUTININ BY SIMULATED ANNEALING",
+  "mode": "residues",
+  "beads": 1527,
+  "palette": [
+    "#f0a0b4",
+    "#c9567a",
+    "#c8e6a0"
+  ],
+  "size": [
+    119.3,
+    133.2,
+    81.7
+  ],
+  "citation": {
+    "authors": "Weis, W.I. et al.",
+    "year": 1990,
+    "title": "Refinement of the influenza virus hemagglutinin by simulated annealing.",
+    "journal": "J.Mol.Biol.",
+    "doi": "10.1016/0022-2836(90)90234-D"
+  },
+  "source": "https://www.rcsb.org/structure/3HMG",
+  "licence": "CC0 1.0",
+  "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "fetched": "2026-10-21"
+}

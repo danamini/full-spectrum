@@ -17,6 +17,7 @@ import * as fmt from './format.js';
 import { fieldNotes, photonNotes, fieldCard, photonFacts } from './notes.js';
 import { MODELS } from '../data/models.js';
 import { EXAMPLE_PICTURES } from '../data/examples.js';
+import { MOLECULES } from '../data/molecules.js';
 import { OBJECTS } from './scale.js';
 import { initWhatsNew } from './whatsnew.js';
 
@@ -634,8 +635,10 @@ function waveCredit(key) {
   if (key === creditFor) return;
   creditFor = key;
   const m = MODELS[key], a = (href, text) => (href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text));
-  const body = SOLAR_BODIES[key], name = OBJECTS.find(o => o.key === key)?.name.replace(/^The /, 'the ');
+  const body = SOLAR_BODIES[key], obj = OBJECTS.find(o => o.key === key), name = obj?.name.replace(/^The /, 'the ');
+  const pdb = obj?.pdb?.map(k => MOLECULES[k]).filter(Boolean);
   $('#waveCredit').innerHTML = m ? `3D model: ${a(m.source, m.title)} by ${a(m.authorUrl, m.author)}, ${esc(m.site)} · ${a(m.licenceUrl, m.licence)}`
+    : pdb?.length ? `From the Protein Data Bank: ${pdb.map(s => `${a(s.source, `PDB ${s.entry}`)} (${esc(s.cite)})`).join(', ')} · ${a(pdb[0].licenceUrl, pdb[0].licence)}`
     : body ? `Fly round ${a(solarTimeline(body), name)} in Solar Timeline` : '';
 }
 function drawView(t) {
