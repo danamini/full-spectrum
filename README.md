@@ -47,7 +47,7 @@ what it does to matter.
   the picture follows the dial, and each one comes with what you are seeing, what its colours mean and where
   it was taken from.
 - **Links to [Molecule Viewer](https://moleculeviewer.org)** for the molecules and elements each band acts on.
-- **A journey** from the longest waves to the shortest, a tour, Surprise me, sound (each frequency shifted
+- **A journey** from the longest waves to the shortest, a tour through every view and mode, Surprise me, sound (each frequency shifted
   down by octaves until you can hear it), picture export, keyboard throughout (`?`), a phone layout, and an
   address for every place (`#nm-550`, `#ghz-2.45`, `#thing-cmb`, `#prism`, `#blackbody-5772`, `#sky-crab`).
 

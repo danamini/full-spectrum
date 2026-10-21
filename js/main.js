@@ -324,11 +324,12 @@ function setKelvin(k) {
 function showSpectrumIfNeeded() { if (state.view !== 'spectrum') { setView('spectrum'); } }
 
 $$('.seg [data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
-$$('[data-polar]').forEach(b => b.addEventListener('click', async () => {
-  (await getField()).polar = b.dataset.polar;
+async function setPolar(polar) {
+  (await getField()).polar = polar;
   updateFieldCard(); details();
-  $$('[data-polar]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-}));
+  $$('[data-polar]').forEach(x => x.setAttribute('aria-pressed', x.dataset.polar === polar ? 'true' : 'false'));
+}
+$$('[data-polar]').forEach(b => b.addEventListener('click', () => setPolar(b.dataset.polar)));
 $$('[data-vis]').forEach(b => b.addEventListener('click', () => go(b.dataset.vis)));
 $('#tempPreset').innerHTML = `<option value="">Examples…</option>${PRESETS.map(p => `<option value="${p.key}">${esc(p.name)} · ${fmt.kelvin(p.k)}</option>`).join('')}`;
 $('#tempPreset').addEventListener('change', e => { const p = PRESETS.find(p => p.key === e.target.value); if (p) go(`blackbody-${p.key}`); });
@@ -471,10 +472,21 @@ $('#captionPrev').addEventListener('click', () => stepJourney(-1));
 $('#captionStop').addEventListener('click', stopJourney);
 $('#journeyBtn').addEventListener('click', () => (state.journey ? stopJourney() : startJourney()));
 
+// The tour shows off every kind of view in turn, with something chosen at random in each.
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const TOUR = [
+  async () => { setMode('wave'); await go(pick(THINGS.map(t => `thing-${t.key}`)), { from: 'tour' }); },
+  () => go(pick(Object.keys(VIS_VIEWS)), { from: 'tour' }),
+  async () => { setMode('field'); await setPolar(pick(['linear', 'circular'])); await go(`thing-${pick(THINGS).key}`, { from: 'tour' }); },
+  () => go(`blackbody-${pick(PRESETS).key}`, { from: 'tour' }),
+  async () => { await go('air', { from: 'tour' }); if (state.tour) { state.scope = null; pickScope(pick(airMod.TELESCOPES)); } },
+  async () => { setMode('photons'); await go(`thing-${pick(THINGS).key}`, { from: 'tour' }); },
+  async () => { setMode('wave'); await go(pick(BANDS).key, { from: 'tour' }); },
+  async () => go(`sky-${pick((await getSky()).objects).key}`, { from: 'tour' }),
+];
 function tourStep() {
-  const options = [...THINGS.map(t => `thing-${t.key}`), ...BANDS.map(b => b.key), 'prism', 'lines', 'blackbody-lava', 'blackbody-sun', 'air'];
-  const next = options[Math.floor(Math.random() * options.length)];
-  go(next, { from: 'tour' });
+  const i = state.tourStep = ((state.tourStep ?? Math.floor(Math.random() * TOUR.length)) + 1) % TOUR.length;
+  TOUR[i]();
   state.tour = setTimeout(tourStep, 8000);
 }
 function startTour() { stopAll(); hideLanding(); $('#tourBtn').setAttribute('aria-pressed', 'true'); tourStep(); }
