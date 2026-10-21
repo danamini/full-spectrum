@@ -188,9 +188,8 @@ GitHub Pages, from a **private** repo `danamini/full-spectrum`, served at `spect
 3. **Hosting:** GitHub Pages for now, on a subdomain of an existing domain (section 8).
 4. **Cross-links:** yes, to Molecule Viewer from the start.
 5. **Repo:** private to start with; public from 2026-10-21 (v0.0.1), so GitHub Pages can serve it.
-6. **Domain:** `spectrum.moleculeviewer.org` (the `CNAME` file is in the repo). Still to do at release:
-   the GoDaddy record `spectrum` CNAME `danamini.github.io`, verify the domain in GitHub, turn on Pages
-   and *Enforce HTTPS*, and settle the private-repo catch in section 8.
+6. **Domain:** `spectrum.moleculeviewer.org` (the `CNAME` file is in the repo). Live since 2026-10-21: GoDaddy
+   CNAME `spectrum` to `danamini.github.io`, Pages from `main`, HTTPS enforced (certificate renews itself).
 
 ## 10. Next work
 
@@ -200,16 +199,17 @@ sound, pictures, keyboard, phone layout, addresses. Tests: `tests/physics.mjs`, 
 
 Still to do:
 
-1. **Publish** (section 8): Daniel adds the GoDaddy record `spectrum` CNAME `danamini.github.io`; verify
-   moleculeviewer.org in GitHub; settle the private-repo catch (Pro plan, or go public, or a public
-   site-only repo); turn on Pages and Enforce HTTPS.
-2. **Licence the code** before going public (Molecule Viewer is MIT). `data/cie1931.js` must stay CC BY-SA 4.0
-   whatever the code licence is.
-3. **Sky gaps** (docs/credits-sky.md, "Left out"): the Sun in radio (Nobeyama 17 GHz, terms page
+Done 2026-10-21: published at https://spectrum.moleculeviewer.org (repo made public; code MIT, data and
+pictures under their owners' terms); v0.0.1 tagged; What's new and releases (README, Releases).
+
+1. **Release 0.0.2** when Daniel asks: its notes are in `assets/releases.json` (status `next`).
+2. **Sky gaps** (docs/credits-sky.md, "Left out"): the Sun in radio (Nobeyama 17 GHz, terms page
    unreachable), infrared and gamma; the Milky Way in ultraviolet. Add if a licensable image turns up.
-4. **Atmosphere** is approximate (`schematic: true`): its optical segment is sea level and the rest Maunakea,
+3. **Atmosphere** is approximate (`schematic: true`): its optical segment is sea level and the rest Maunakea,
    so there is a small step at 0.9 µm. A single consistent model would remove it.
-5. **Unchecked figures:** the honeybee peaks (344/436/556 nm, Peitsch et al. 1992) were checked against
+4. **Unchecked figures:** the honeybee peaks (344/436/556 nm, Peitsch et al. 1992) were checked against
    the abstract only; check the full text.
-6. **README GIF**, like Molecule Viewer's, once the site is live.
+5. **Unchecked figures:** the dark-adapted eye's threshold (Hecht, Shlaer and Pirenne 1942: 54 to 148 photons
+   at the cornea, 5 to 14 absorbed) in the photon cards is from memory; check the paper.
+6. **README GIF**, like Molecule Viewer's, now the site is live.
 
