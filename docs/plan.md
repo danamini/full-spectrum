@@ -202,7 +202,7 @@ Still to do:
 Done 2026-10-21: published at https://spectrum.moleculeviewer.org (repo made public; code MIT, data and
 pictures under their owners' terms); v0.0.1 tagged; What's new and releases (README, Releases).
 
-1. **Next release:** add each change to a new `next` release in `assets/releases.json` (0.0.2 released 2026-10-21).
+1. **Next release:** add each change to a new `next` release in `assets/releases.json` (0.0.3 released 2026-10-21).
 2. **Sky gaps** (docs/credits-sky.md, "Left out"): the Sun in radio (Nobeyama 17 GHz, terms page
    unreachable), infrared and gamma; the Milky Way in ultraviolet. Add if a licensable image turns up.
 3. **Atmosphere** is approximate (`schematic: true`): its optical segment is sea level and the rest Maunakea,

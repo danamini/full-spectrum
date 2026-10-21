@@ -6,8 +6,8 @@
     {
       "version": "0.0.3",
       "stage": "Alpha",
-      "status": "next",
-      "date": null,
+      "status": "released",
+      "date": "2026-10-21",
       "title": "Real planets, a real Everest, and everything in between rebuilt",
       "items": [
         {"kind": "better", "text": "Jupiter, Neptune, the Earth and the Moon wear real maps made from NASA data (Solar System Scope); the Earth has its clouds, a sheen on the sea and city lights on its night side", "go": "#km-11900"},

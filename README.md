@@ -1,6 +1,6 @@
 # Full Spectrum
 
-**Alpha 0.0.2.** An early release: some things are unfinished and will change. The site says so in its header
+**Alpha 0.0.3.** An early release: some things are unfinished and will change. The site says so in its header
 and on the landing page, and its What's new lists every version.
 
 ## Releases
