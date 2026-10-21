@@ -1,6 +1,6 @@
 # Full Spectrum
 
-**Alpha.** An early release: some things are unfinished and will change. The site says so in its header
+**Alpha, version 0.0.1** (`js/version.js`, kept equal to `package.json`). An early release: some things are unfinished and will change. The site says so in its header
 and on the landing page.
 
 The whole electromagnetic spectrum, end to end: radio waves longer than the Earth down to gamma rays

@@ -16,6 +16,7 @@ import { SOLAR } from '../data/solar.js';
 import * as fmt from './format.js';
 import { fieldNotes, photonNotes, fieldCard } from './notes.js';
 import { MODELS } from '../data/models.js';
+import { VERSION } from './version.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -625,6 +626,7 @@ function drawView(t) {
 }
 
 // ---------------------------------------------------------------- start
+$$('[data-version]').forEach(el => { el.textContent = VERSION; });
 setKelvin(5772);
 setVis('prism');
 setMode('wave');

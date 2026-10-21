@@ -1,5 +1,6 @@
 {
   "name": "full-spectrum",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "description": "The whole electromagnetic spectrum, end to end: radio to gamma, with the real colours of light.",

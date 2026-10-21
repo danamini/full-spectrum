@@ -16,5 +16,9 @@ for (const [key, m] of Object.entries(MODELS)) {
   check(!/NC|ND/.test(m.licence), `${key}: licence ${m.licence} forbids commercial use or changes`);
   check(doc.includes(m.source) && doc.includes(m.author), `${key}: not credited in docs/credits-models.md`);
 }
+// The version on screen is the package's.
+const pkg = JSON.parse(await readFile(`${ROOT}package.json`, 'utf8'));
+const { VERSION } = await import('../js/version.js');
+check(pkg.version === VERSION, `js/version.js says ${VERSION}, package.json ${pkg.version}`);
 console.log(failures ? `${failures} credit problems` : `  ok    credits for ${Object.keys(MODELS).length} models`);
 process.exitCode = failures ? 1 : 0;
