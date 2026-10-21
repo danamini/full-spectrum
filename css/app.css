@@ -202,7 +202,7 @@ body[data-view="sky"] .controls [data-for="sky"] { display: flex; }
 .slider { display: flex; align-items: center; gap: 10px; color: var(--dim); }
 .slider input { width: clamp(160px, 26vw, 380px); accent-color: var(--amber); }
 /* The examples: a row of picture tiles, coolest to hottest, the current one outlined. */
-.bb-examples { position: absolute; display: none; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; scroll-snap-type: x proximity; }
+.bb-examples { position: absolute; z-index: 1; display: none; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; scroll-snap-type: x proximity; }
 body[data-view="blackbody"] .bb-examples { display: flex !important; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); }
 .bb-examples button { flex: none; width: 116px; padding: 0 0 7px; border: 1px solid var(--rule); border-radius: 12px; background: var(--glass);
   -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); color: var(--dim); text-align: left; cursor: pointer; overflow: hidden; scroll-snap-align: start; }

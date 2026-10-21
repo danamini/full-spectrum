@@ -99,6 +99,7 @@ await test('typing a value into the readout', async page => {
   await go(page, 'visible');
   for (const [sel, text, want] of [['#inLength', '21 cm', 0.21], ['#inFreq', '2.45 GHz', 0.12236], ['#inEnergy', '13.6 eV', 91.16e-9]]) {
     await page.fill(sel, text); await page.press(sel, 'Enter'); await wait(page, 2400);
+    await page.waitForFunction(() => !spectrum.ribbon.anim, null, { timeout: 10000 }).catch(() => {});
     const s = await app(page);
     expect(near(s.metres, want), `${text}: ${s.metres}`);
   }
