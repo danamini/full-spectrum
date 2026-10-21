@@ -87,7 +87,7 @@ export class WaveStage {
 
     this.composer = new EffectComposer(r);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.85, 0.5, 1.0);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.85, 0.5, 1.2);
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
     this.size = { w: 0, h: 0 };

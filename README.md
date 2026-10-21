@@ -27,7 +27,7 @@ what it does to matter.
   mistaken for it.
 - **The wave at a scale you can feel.** The light at the cursor as a glowing travelling wave, beside a 3D
   model of the real thing nearest its size, lit and moving: Jupiter turning, Everest with snow blowing off
-  the summit, the Eiffel Tower sparkling, a whale swimming, a walking ant, a red blood cell, a flu virus with
+  the summit, the Eiffel Tower, a whale, an ant, a red blood cell, a flu virus with
   its spikes, a ribosome building a protein, the electron cloud of a hydrogen atom, a proton's quarks. Or as electric and magnetic fields in 3D (linear or circular polarisation), labelled and
   measured, with how strong the fields are in sunlight; or as photons: how many are in a metre of a 1 mW beam,
   and what one of them can do.
@@ -108,7 +108,7 @@ Every dataset and image, with its exact source, citation and licence, is in
   approximate, and labelled so.
 - Sky: NASA (Multiwavelength Milky Way, SDO, Chandra, Hubble, Spitzer, Fermi), ESO, ALMA, Hinode, NRAO and
   ESA/XMM-Newton, each credited as its owner asks.
-- 3D models: ready-made ones from Sketchfab and Poly Pizza, each credited under the picture with its author
+- 3D models: ready-made ones from Poly Pizza, each credited under the picture with its author
   and licence (CC BY or CC0), fetched and slimmed by `tools/fetch_models.mjs`; the rest are modelled in code.
 - Glass: Schott SF11 Sellmeier coefficients. Constants: CODATA 2018 exact SI values.
 - Band edges: ITU-R V.431, ISO 20473, ISO 21348. They are conventions, and the panel says so.

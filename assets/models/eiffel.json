@@ -1,0 +1,13 @@
+{
+  "key": "eiffel",
+  "title": "SM - EIffel Tower",
+  "author": "Scott Marshall",
+  "authorUrl": "https://poly.pizza/u/Scott%20Marshall",
+  "source": "https://poly.pizza/m/aIpJchqtRTg",
+  "site": "Poly Pizza",
+  "licence": "CC BY 3.0",
+  "licenceUrl": "https://creativecommons.org/licenses/by/3.0/",
+  "changes": "simplified from 57,185 to 49,561 triangles; textures resized to at most 1024 px and saved as WebP; compressed",
+  "clip": null,
+  "fetched": "2026-10-21"
+}

@@ -17,7 +17,7 @@ export const OBJECTS = [
   { key: 'eiffel', name: 'The Eiffel Tower', m: 330, tall: true },
   { key: 'pitch', name: 'A football pitch', m: 105 },
   { key: 'whale', name: 'A blue whale', m: 25 },
-  { key: 'bus', name: 'A double-decker bus', m: 11.2 },
+  { key: 'bus', name: 'A bus', m: 12 },
   { key: 'person', name: 'A person', m: 1.7, tall: true },
   { key: 'phone', name: 'A phone', m: 0.147, tall: true },
   { key: 'coin', name: 'A £1 coin', m: 0.02343 },
