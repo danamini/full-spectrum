@@ -7,7 +7,8 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import * as micro from './micro.js';
-import { proton as protonCloud, PROJ, RADIUS as PROTON_RADIUS } from './nucleon.js';
+import { proton as protonCloud, PROJ, RADIUS as PROTON_RADIUS, nucleus, cloudMaterial, pointsFrom, buffer, push, randomDir, tick } from './nucleon.js';
+import { Beads } from './beads.js';
 
 const TAU = Math.PI * 2;
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -401,71 +402,109 @@ const MODELS = {
     return { obj: holder, update: t => { hair.rotation.x = t * 0.4; holder.rotation.y = Math.sin(t * 0.3) * 0.35; } };
   },
 
+  // The resting red cell's biconcave outline (Evans and Fung), 8 µm across, cut open to show it is packed with
+  // haemoglobin (drawn far larger than the real 5.5 nm, a third of a billion of them), with others drifting behind.
   bloodCell() {
-    // The resting red cell's biconcave outline (Evans and Fung), as a solid of revolution.
+    const half = r => 0.5 * Math.sqrt(Math.max(0, 1 - (r / 0.5) ** 2)) * (0.0518 + 2.0026 * (r / 0.5) ** 2 - 1.1214 * (r / 0.5) ** 4) * 0.62;
     const prof = [];
-    for (let i = 0; i <= 48; i++) { const r = (i / 48) * 0.5, x = r / 0.5, z = 0.5 * Math.sqrt(Math.max(0, 1 - x * x)) * (0.0518 + 2.0026 * x * x - 1.1214 * x ** 4) * 0.6; prof.push(new THREE.Vector2(r, z)); }
-    for (let i = 47; i >= 0; i--) prof.push(new THREE.Vector2(prof[i].x, -prof[i].y));
-    const geo = new THREE.LatheGeometry(prof.map(v => new THREE.Vector2(Math.max(v.x, 0.0001), v.y)), 72);
-    const cell = new THREE.Mesh(geo, phys(0xc4202a, { roughness: 0.45, sheen: 1, sheenColor: 0xff8080, clearcoat: 0.3, emissive: 0x3a0000 }));
-    const g = new THREE.Group(); g.add(cell);
-    // Two more behind, out of focus.
-    for (const [x, y, z, s] of [[-0.7, 0.35, -0.8, 0.8], [0.75, -0.3, -1.1, 0.7]]) { const c = cell.clone(); c.material = cell.material.clone(); c.material.transparent = true; c.material.opacity = 0.35; c.position.set(x, y, z); c.scale.setScalar(s); g.add(c); }
-    return { obj: g, update: t => { g.children.forEach((c, i) => c.rotation.set(0.75 + Math.sin(t * 0.4 + i) * 0.35, 0, Math.sin(t * 0.3 + i) * 0.3)); } };
+    for (let i = 0; i <= 64; i++) { const r = (i / 64) * 0.5; prof.push(new THREE.Vector2(Math.max(r, 0.0001), half(r))); }
+    for (let i = 63; i >= 0; i--) prof.push(new THREE.Vector2(prof[i].x, -prof[i].y));
+    const skin = canvasTexture(256, 256, (ctx, w, h) => {
+      const img = ctx.createImageData(w, h);
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const v = 110 + 120 * fbm(x / 22, y / 22, 3, 4); const i = (y * w + x) * 4; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+      ctx.putImageData(img, 0, 0);
+    }, false);
+    skin.wrapS = skin.wrapT = THREE.RepeatWrapping; skin.repeat.set(4, 2);
+    const mat = () => phys(0xb3141f, { roughness: 0.42, sheen: 1, sheenColor: 0xff7a6a, sheenRoughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.4, bumpMap: skin, bumpScale: 0.6, emissive: 0x2a0204, side: THREE.DoubleSide });
+    const cut = new THREE.Mesh(new THREE.LatheGeometry(prof, 160, Math.PI * 0.5, Math.PI * 1.5), mat());
+    const g = new THREE.Group(), main = new THREE.Group(); main.add(cut);
+    // the inside of the cut: haemoglobin, packed
+    const r = rng(23), hb = new Beads(), hues = [new THREE.Color('#c0392b'), new THREE.Color('#a93226'), new THREE.Color('#d24d3c')];
+    for (let k = 0; k < 9000; k++) {
+      const rad = Math.sqrt(r()) * 0.49, a = r() * Math.PI * 0.5, z = (r() * 2 - 1) * half(rad) * 0.92;
+      hb.add(Math.cos(a) * rad, z, Math.sin(a) * rad, 0.0085, hues[k % 3]);
+    }
+    main.add(hb.points());
+    g.add(main);
+    // others, further back and softer
+    const others = [[-0.75, 0.32, -0.9, 0.85], [0.8, -0.28, -1.2, 0.75], [0.15, 0.55, -1.6, 0.7], [-0.3, -0.6, -1.4, 0.65]].map(([x, y, z, sc], i) => {
+      const m = mat(); m.transparent = true; m.opacity = 0.55 - i * 0.08;
+      const c = new THREE.Mesh(new THREE.LatheGeometry(prof, 96), m);
+      c.position.set(x, y, z); c.scale.setScalar(sc); g.add(c); return c;
+    });
+    return { obj: g, update: t => {
+      main.rotation.set(0.95 + Math.sin(t * 0.35) * 0.18, -0.6 + Math.sin(t * 0.22) * 0.3, 0.15);
+      others.forEach((c, i) => { c.rotation.set(0.6 + Math.sin(t * 0.4 + i) * 0.5, t * 0.1 * (i % 2 ? 1 : -1), Math.sin(t * 0.3 + i) * 0.3); c.position.x += Math.sin(t * 0.2 + i) * 0.0004; });
+    } };
   },
 
+  // Water: oxygen and two hydrogens at their measured bond length (0.958 Å) and angle (104.5°), as balls and
+  // sticks inside a shimmering cloud of its ten electrons. The cloud is the molecule's real size and shape (one
+  // unit is 2.8 Å); it gathers towards the oxygen (pink) and thins round the hydrogens (blue): water is polar.
   water() {
-    const g = new THREE.Group(), angle = (104.5 / 180) * Math.PI, bond = 0.32;
-    const o = new THREE.Mesh(new THREE.SphereGeometry(0.3, 48, 32), phys(0xe2483f, { roughness: 0.2, clearcoat: 1 }));
-    const hs = [-1, 1].map(s => { const h = new THREE.Mesh(new THREE.SphereGeometry(0.2, 48, 32), phys(0xd8dce4, { roughness: 0.3, clearcoat: 0.6 })); h.position.set(Math.sin(angle / 2) * bond * s, -Math.cos(angle / 2) * bond, 0); return h; });
-    g.add(o, ...hs);
-    g.add(glowShell(new THREE.SphereGeometry(0.4, 48, 32), '#ff9a8a', { power: 2.5, strength: 0.5 }));
-    for (const h of hs) { const s = glowShell(new THREE.SphereGeometry(0.26, 32, 24), '#9ac4ff', { power: 3, strength: 0.3 }); s.position.copy(h.position); g.add(s); h.userData.shell = s; }
-    g.position.y = 0.08;
+    const g = new THREE.Group(), k = 1 / 2.8, half = (104.45 / 2) * Math.PI / 180, bond = 0.9584 * k;
+    const o = new THREE.Mesh(new THREE.SphereGeometry(0.42 * k, 48, 32), phys(0xe2483f, { roughness: 0.25, clearcoat: 1, sheen: 0.4 }));
+    const hs = [-1, 1].map(s => new THREE.Mesh(new THREE.SphereGeometry(0.26 * k, 48, 32), phys(0xeef1f6, { roughness: 0.3, clearcoat: 0.8 })));
+    const stick = phys(0xb8c0cc, { roughness: 0.35, metalness: 0.1 });
+    const sticks = hs.map(() => new THREE.Mesh(new THREE.CylinderGeometry(0.09 * k, 0.09 * k, 1, 16), stick));
+    const place = a => hs.forEach((h, i) => {
+      h.position.set(Math.sin(a) * bond * (i ? 1 : -1), -Math.cos(a) * bond, 0);
+      sticks[i].position.copy(h.position).multiplyScalar(0.5); sticks[i].scale.y = bond;
+      sticks[i].quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), h.position.clone().normalize());
+    });
+    place(half);
+    const atoms = new THREE.Group(); atoms.add(o, ...hs, ...sticks);
+    // the electrons: 8 round the oxygen (pulled in, and bulging away from the hydrogens where its lone pairs
+    // are), one shared towards each hydrogen
+    const b = buffer(), c = new THREE.Color(), gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v); };
+    const sample = v => {
+      const which = Math.random();
+      if (which < 0.8) { v.set(gauss(), gauss(), gauss()).multiplyScalar(0.62 * k); v.y += 0.18 * k; }
+      else { const s = which < 0.9 ? -1 : 1; v.set(gauss(), gauss(), gauss()).multiplyScalar(0.45 * k).add(new THREE.Vector3(Math.sin(half) * bond * s * 0.8, -Math.cos(half) * bond * 0.8, 0)); }
+      return v;
+    };
+    for (let i = 0; i < 16000; i++) {
+      const a = sample(new THREE.Vector3()), d = sample(new THREE.Vector3());
+      c.set(a.y > -0.25 * k ? '#ff8f80' : '#86bfff');
+      push(b, a, d, c, 0.8 + Math.random() * 0.6);
+    }
+    const cloud = pointsFrom(b, cloudMaterial({ size: 0.034, rate: 0.12 }));
+    cloud.material.uniforms.uOpacity.value = 0.42;
+    g.add(atoms, cloud);
+    g.position.y = 0.06;
     const holder = new THREE.Group(); holder.add(g);
-    return { obj: holder, update: t => {
-      // The bending vibration, slowed down a long way.
-      const a = angle / 2 + Math.sin(t * 3) * 0.06;
-      hs.forEach((h, i) => { const s = i ? 1 : -1; h.position.set(Math.sin(a) * bond * s, -Math.cos(a) * bond, 0); h.userData.shell.position.copy(h.position); });
+    return { obj: holder, update: (t, px, perUnit) => {
+      if (perUnit) PROJ.value = perUnit;
+      tick(g, t);
+      place(half + Math.sin(t * 3) * 0.035); // the bending vibration, slowed down a long way
       g.rotation.y = Math.sin(t * 0.35) * 1.1;
     } };
   },
 
+  // Hydrogen's electron in its lowest state, as Molecule Viewer draws a cloud: each point blinks between two
+  // places it might be found, so the cloud shimmers. Densest at the centre, with no edge; two Bohr radii, the
+  // size usually quoted, is one unit. The nucleus is drawn far too large to see: at true scale it would be
+  // 60,000 times smaller than the cloud.
   hydrogen() {
-    // The electron in its lowest state: a cloud, densest at the centre, sampled at random each frame.
-    const n = 2600, pos = new Float32Array(n * 3);
-    const a0 = 0.25; // so that two Bohr radii, the atom's usual quoted size, is one unit
-    const sample = (r, i) => {
-      const rad = -a0 / 2 * Math.log(r() * r() * r()); // the 1s radial distribution is a gamma(3) in 2r/a0
-      const u = r() * 2 - 1, phi = r() * TAU, s = Math.sqrt(1 - u * u);
-      pos.set([s * Math.cos(phi) * rad, u * rad, s * Math.sin(phi) * rad], i * 3);
-    };
-    const r = rng(21); for (let i = 0; i < n; i++) sample(r, i);
-    const cloud = sparks(pos, 0x7cc4ff, 0.03, { opacity: 0.22 });
-    const nucleus = sparks([0, 0, 0], 0xffc070, 0.08);
-    const g = new THREE.Group(); g.add(cloud, nucleus, glowShell(new THREE.SphereGeometry(0.5, 48, 32), '#4a8cff', { power: 2, strength: 0.15 }));
-    let k = 0;
-    return { obj: g, update: t => {
-      for (let j = 0; j < 120; j++) sample(Math.random, (k = (k + 1) % n));
-      cloud.geometry.attributes.position.needsUpdate = true;
-      g.rotation.y = t * 0.1;
-    } };
+    const a0 = 0.25, b = buffer(), c = new THREE.Color();
+    const sample = v => randomDir(v).multiplyScalar(-a0 / 2 * Math.log(Math.random() * Math.random() * Math.random())); // 1s: gamma(3) in 2r/a0
+    for (let i = 0; i < 12000; i++) {
+      const p = sample(new THREE.Vector3()), q = sample(new THREE.Vector3());
+      c.set('#7cc4ff').lerp(new THREE.Color('#d6ecff'), Math.max(0, 1 - p.length() / 0.25) * 0.6);
+      push(b, p, q, c, 0.8 + Math.random() * 0.5);
+    }
+    const cloud = pointsFrom(b, cloudMaterial({ size: 0.03, rate: 0.12 }));
+    cloud.material.uniforms.uOpacity.value = 0.75;
+    const core = sparks([0, 0, 0], 0xffd9a0, 0.03);
+    const g = new THREE.Group(); g.add(cloud, core);
+    return { obj: g, update: (t, px, perUnit) => { if (perUnit) PROJ.value = perUnit; tick(g, t); g.rotation.y = t * 0.08; } };
   },
 
+  // Uranium-238 as Molecule Viewer packs a nucleus: 92 protons and 146 neutrons, jostling.
   uranium() {
-    // 92 protons and 146 neutrons, packed.
-    const n = 238, r = rng(17), mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 20, 14), phys(0xffffff, { roughness: 0.35, clearcoat: 0.6 }), n);
-    const pts = [], m = new THREE.Matrix4(), c = new THREE.Color();
-    const rad = 0.075;
-    for (let i = 0; i < n; i++) { const y = 1 - (i + 0.5) / n * 2, s = Math.sqrt(1 - y * y), a = i * 2.39996, d = Math.cbrt((i + 0.5) / n) * 0.42; pts.push(V(Math.cos(a) * s * d, y * d, Math.sin(a) * s * d)); }
-    pts.sort(() => r() - 0.5);
-    pts.forEach((p, i) => { mesh.setColorAt(i, c.set(i < 92 ? 0xe2504a : 0x9aa6bc)); });
-    const g = new THREE.Group(); g.add(mesh, glowShell(new THREE.SphereGeometry(0.52, 48, 32), '#ff7a5a', { power: 2, strength: 0.6 }));
-    return { obj: g, update: t => {
-      pts.forEach((p, i) => { const j = 0.008; m.makeScale(rad, rad, rad).setPosition(p.x + Math.sin(t * 7 + i) * j, p.y + Math.sin(t * 6.3 + i * 1.7) * j, p.z + Math.sin(t * 5.1 + i * 2.3) * j); mesh.setMatrixAt(i, m); });
-      mesh.instanceMatrix.needsUpdate = true;
-      g.rotation.y = t * 0.2;
-    } };
+    const n = nucleus(92, 238), g = new THREE.Group();
+    n.group.scale.setScalar(0.5 / n.radius); g.add(n.group);
+    return { obj: g, update: t => { n.update(t); g.rotation.y = t * 0.2; g.rotation.x = 0.2; } };
   },
 
   // Molecule Viewer's proton (js/nucleon.js), sized so its charge radius fills the unit.

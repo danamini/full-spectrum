@@ -1,3 +1,6 @@
+// Molecule Viewer's subatomic pictures (https://moleculeviewer.org, js/dive.js and js/cloud.js; the same author's,
+// MIT): its shimmering point clouds, a packed nucleus, and a proton.
+//
 // A proton as Molecule Viewer draws it: three valence quarks (two up, one down) whose colour charges keep
 // swapping as they trade gluons, gluon flux tubes between them, inside a seething cloud of short-lived
 // quark-antiquark pairs. Taken from Molecule Viewer (https://moleculeviewer.org, js/dive.js nucleonLevel and the
@@ -39,14 +42,14 @@ const FRAG = /* glsl */`
 // Drawing-buffer pixels per scene unit at distance 1; the wave view sets it for the scale the proton is shown at.
 export const PROJ = { value: 800 };
 
-function cloudMaterial({ size = 0.08, rate = 0.12 } = {}) {
+export function cloudMaterial({ size = 0.08, rate = 0.12 } = {}) {
   return new THREE.ShaderMaterial({
     vertexShader: VERT, fragmentShader: FRAG,
     uniforms: { uTime: { value: 0 }, uProj: PROJ, uSize: { value: size }, uRate: { value: rate }, uOpacity: { value: 1 } },
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   });
 }
-function pointsFrom(buf, material) {
+export function pointsFrom(buf, material) {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(buf.pos, 3));
   g.setAttribute('aAlt', new THREE.Float32BufferAttribute(buf.alt, 3));
@@ -56,16 +59,16 @@ function pointsFrom(buf, material) {
   g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e4);
   return new THREE.Points(g, material);
 }
-const buffer = () => ({ pos: [], alt: [], col: [], seed: [], size: [] });
-function push(buf, a, b, color, size) {
+export const buffer = () => ({ pos: [], alt: [], col: [], seed: [], size: [] });
+export function push(buf, a, b, color, size) {
   buf.pos.push(a.x, a.y, a.z); buf.alt.push(b.x, b.y, b.z); buf.col.push(color.r, color.g, color.b);
   buf.seed.push(Math.random()); buf.size.push(size);
 }
-const randomDir = (v = new THREE.Vector3()) => {
+export const randomDir = (v = new THREE.Vector3()) => {
   const u = Math.random() * 2 - 1, t = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u);
   return v.set(r * Math.cos(t), r * Math.sin(t), u);
 };
-const tick = (group, t) => group.traverse(o => { if (o.material?.uniforms?.uTime) o.material.uniforms.uTime.value = t; });
+export const tick = (group, t) => group.traverse(o => { if (o.material?.uniforms?.uTime) o.material.uniforms.uTime.value = t; });
 
 const QUARK_COLOURS = [0xff4060, 0x40ff8a, 0x4f8bff];
 // The proton is 3.4 scene units in radius (its 0.84 fm charge radius).
@@ -138,5 +141,46 @@ export function proton() {
       }
       pos.needsUpdate = alt.needsUpdate = col.needsUpdate = true;
     },
+  };
+}
+
+// ---------------------------------------------------------------- nucleus
+// Z protons and A - Z neutrons packed into a ball by a few hundred rounds of relaxation: they push apart where
+// they overlap and are all drawn inwards, as the strong force does. Nucleon radius 1 scene unit (0.84 fm).
+const NUCLEON = new THREE.SphereGeometry(1, 40, 28);
+function nucleonMaterial(color, emissive) {
+  return new THREE.MeshPhysicalMaterial({ color, emissive, emissiveIntensity: 0.5, roughness: 0.4, envMapIntensity: 0.35,
+    clearcoat: 0.6, clearcoatRoughness: 0.25, sheen: 0.4, sheenColor: new THREE.Color(color).lerp(new THREE.Color(0xffffff), 0.5) });
+}
+export function nucleus(Z, A) {
+  const r0 = 1, R = 1.08 * r0 * Math.cbrt(A), pos = [], d = new THREE.Vector3();
+  for (let i = 0; i < A; i++) pos.push(randomDir(new THREE.Vector3()).multiplyScalar(R * Math.cbrt(Math.random())));
+  for (let iter = 0; iter < 240; iter++) {
+    for (let i = 0; i < A; i++) {
+      for (let j = i + 1; j < A; j++) {
+        d.subVectors(pos[i], pos[j]);
+        const dist = d.length() || 1e-3, overlap = 2 * r0 * 0.96 - dist;
+        if (overlap > 0) { d.multiplyScalar((overlap / dist) * 0.5); pos[i].add(d); pos[j].sub(d); }
+      }
+      pos[i].multiplyScalar(0.985);
+    }
+  }
+  // spread the protons evenly through the ball rather than leaving them where they fell
+  const isProton = new Array(A).fill(false);
+  pos.map((p, i) => i).sort(() => Math.random() - 0.5).slice(0, Z).forEach(i => { isProton[i] = true; });
+  const group = new THREE.Group(), pm = nucleonMaterial(0xe8432a, 0x4a0c04), nm = nucleonMaterial(0x6f8fc4, 0x0a1430), meshes = [];
+  pos.forEach((p, i) => {
+    const m = new THREE.Mesh(NUCLEON, isProton[i] ? pm : nm);
+    m.position.copy(p); m.scale.setScalar(r0 * 0.98);
+    m.userData = { home: p.clone(), phase: Math.random() * 6.28 };
+    group.add(m); meshes.push(m);
+  });
+  const radius = Math.max(...pos.map(p => p.length() + r0));
+  return {
+    group, radius,
+    update: t => meshes.forEach(m => {
+      const w = 0.04, h = m.userData.home, ph = m.userData.phase;
+      m.position.set(h.x + Math.sin(t * 2.1 + ph) * w, h.y + Math.sin(t * 1.7 + ph * 1.3) * w, h.z + Math.sin(t * 2.5 + ph * 0.7) * w);
+    }),
   };
 }

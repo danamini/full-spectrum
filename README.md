@@ -1,6 +1,6 @@
 # Full Spectrum
 
-**Alpha 0.0.1.** An early release: some things are unfinished and will change. The site says so in its header
+**Alpha 0.0.2.** An early release: some things are unfinished and will change. The site says so in its header
 and on the landing page, and its What's new lists every version.
 
 ## Releases
@@ -135,7 +135,8 @@ Every dataset and image, with its exact source, citation and licence, is in
 - Band edges: ITU-R V.431, ISO 20473, ISO 21348. They are conventions, and the panel says so.
 - Molecules: haemoglobin (PDB 2HHB), DNA (1BNA), the ribosome (7K00) and flu's spikes (3HMG, 2HTY) from the
   [RCSB Protein Data Bank](https://www.rcsb.org) (CC0), each paper cited; built into beads by `tools/build_molecules.mjs`.
-- The proton's quarks, gluons and sea are [Molecule Viewer](https://moleculeviewer.org)'s (same author, MIT), in `js/nucleon.js`.
+- The proton, the uranium nucleus and the electron clouds are drawn as [Molecule Viewer](https://moleculeviewer.org)
+  draws them (same author, MIT), in `js/nucleon.js`.
 - Software: [three.js](https://threejs.org) r170 (MIT). Fonts: Big Shoulders Display and IBM Plex Sans via
   Google Fonts (SIL Open Font License). Tests use Playwright (Apache 2.0); the model tools use glTF Transform (MIT), meshoptimizer (MIT) and sharp
   (Apache 2.0).
