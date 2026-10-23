@@ -101,21 +101,25 @@ export class WaveView {
 
     // The wave, glowing.
     const phase = 2 * Math.PI * SHOWN_HZ * t;
-    const pts = [];
+    // Its height stays the same all the way along, as a steady wave's does; the picture is a window onto it, so
+    // the ends fade out rather than shrink.
+    const pts = [], fade = [], FADE = Math.min(90, W * 0.1);
     for (let i = 0; i <= W; i += 2) {
-      const e = Math.min(1, Math.min(i, W - i) / 70), envelope = e * e * (3 - 2 * e);
-      pts.push(x0 + i, cy - A * envelope * Math.sin((2 * Math.PI * i) / pxPerλ - phase));
+      const e = Math.min(1, Math.min(i, W - i) / FADE);
+      pts.push(x0 + i, cy - A * Math.sin((2 * Math.PI * i) / pxPerλ - phase));
+      fade.push(e * e * (3 - 2 * e));
     }
-    if (this.stage) { this.stage.wave(pts, rgb); this.stage.photons(null); }
+    if (this.stage) { this.stage.wave(pts, rgb, fade); this.stage.photons(null); }
     else {
       ctx.save();
       ctx.beginPath();
       for (let i = 0; i < pts.length; i += 2) i ? ctx.lineTo(pts[i], pts[i + 1]) : ctx.moveTo(pts[i], pts[i + 1]);
       ctx.lineJoin = 'round';
+      const along = (a) => { const g = ctx.createLinearGradient(x0, 0, x0 + W, 0), c = `rgba(${a.join(',')},`, f = FADE / W; g.addColorStop(0, `${c}0)`); g.addColorStop(f, `${c}1)`); g.addColorStop(1 - f, `${c}1)`); g.addColorStop(1, `${c}0)`); return g; };
       ctx.shadowColor = colour; ctx.shadowBlur = 18;
-      ctx.strokeStyle = colour; ctx.lineWidth = 3;
+      ctx.strokeStyle = along(rgb); ctx.lineWidth = 3;
       ctx.stroke();
-      ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.shadowBlur = 0; ctx.globalAlpha = 0.55; ctx.strokeStyle = along([255, 255, 255]); ctx.lineWidth = 1; ctx.stroke();
       ctx.restore();
     }
 

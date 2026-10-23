@@ -4,6 +4,17 @@
   "feedback": "https://github.com/danamini/full-spectrum/issues/new",
   "releases": [
     {
+      "version": "0.0.4",
+      "stage": "Alpha",
+      "status": "next",
+      "title": "Steadier pictures",
+      "items": [
+        {"kind": "fix", "text": "The wave keeps the same height all the way across, as a steady wave does, and fades out at the edges of the picture instead of shrinking into a curl", "go": "#nm-4"},
+        {"kind": "fix", "text": "The football stadium no longer flickers: its crowd, pitch and players hold still as it turns, and every model is drawn with finer depth", "go": "#m-98"},
+        {"kind": "new", "text": "Credits for all the data, pictures, maps, molecules, models, fonts and code, in Getting around (?)"}
+      ]
+    },
+    {
       "version": "0.0.3",
       "stage": "Alpha",
       "status": "released",

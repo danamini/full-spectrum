@@ -127,7 +127,7 @@ export function pitch() {
   });
   const g = new THREE.Group();
   const turf = new THREE.Mesh(new THREE.PlaneGeometry(L, Wd), std(0xffffff, { map: grass, roughness: 0.9 })); turf.rotation.x = -Math.PI / 2; g.add(turf);
-  const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 0.12, Wd + 0.1), std(0x1d4a24, { roughness: 1 })); apron.rotation.x = -Math.PI / 2; apron.position.y = -0.0005; g.add(apron);
+  const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 0.12, Wd + 0.1), std(0x1d4a24, { roughness: 1 })); apron.rotation.x = -Math.PI / 2; apron.position.y = -0.002; g.add(apron);
   // advertising boards round the pitch, lit
   const ads = canvasTexture(1024, 32, (ctx, w, h) => { const cols = ['#e63946', '#1d3557', '#f2b45a', '#2a9d8f', '#ffffff', '#7b2cbf']; for (let i = 0; i < 16; i++) { ctx.fillStyle = cols[i % cols.length]; ctx.fillRect(i * 64, 0, 64, h); ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillRect(i * 64 + 12, 12, 40, 6); } });
   ads.wrapS = THREE.RepeatWrapping; ads.repeat.set(3, 1);
@@ -136,16 +136,21 @@ export function pitch() {
     const b = new THREE.Mesh(new THREE.BoxGeometry(len, 1 * k, 0.002), boardMat); b.position.set(x, 0.5 * k, z); b.rotation.y = rot; g.add(b);
   }
   // stands: stepped tiers of seats, with the crowd as coloured dots
+  // Fans gather by their team, in soft patches along rows: random specks shimmer as the stadium turns.
   const crowd = canvasTexture(512, 128, (ctx, w, h) => {
     ctx.fillStyle = '#2b2f3a'; ctx.fillRect(0, 0, w, h);
-    for (let i = 0; i < 9000; i++) { const x = hash(i, 1, 2) * w, y = hash(i, 3, 4) * h, c = hash(i, 5, 6); ctx.fillStyle = c < 0.45 ? '#c8302f' : c < 0.8 ? '#2f5fc8' : c < 0.9 ? '#f1e3c8' : '#222'; ctx.fillRect(x, y, 2, 2); }
+    for (let row = 0; row < 32; row++) for (let i = 0; i < 128; i++) {
+      const home = fbm(i / 7, row / 3, 3, 2) > 0.5, c = hash(i, row, 6);
+      ctx.fillStyle = c < 0.08 ? '#8a8476' : home ? '#9a3434' : '#3a5596';
+      ctx.fillRect(i * 4, row * 4 + 1, 3, 3);
+    }
   });
   crowd.wrapS = crowd.wrapT = THREE.RepeatWrapping;
   const roofMat = std(0xc9d0da, { metalness: 0.5, roughness: 0.35, transparent: true, opacity: 0.55, side: THREE.DoubleSide }), backMat = std(0x2a2e38, { roughness: 0.9 });
   const stand = (len, rot, dist) => {
     const sg = new THREE.Group();
     // a sloping bank of seats, full, then the back wall and a light roof
-    const tex = crowd.clone(); tex.needsUpdate = true; tex.repeat.set(len * 6, 1.5);
+    const tex = crowd.clone(); tex.needsUpdate = true; tex.repeat.set(len * 3, 1);
     const rake = new THREE.Mesh(new THREE.PlaneGeometry(len, 26 * k), std(0xffffff, { map: tex, roughness: 0.9 }));
     rake.rotation.x = -Math.PI / 2 + 0.6; rake.position.set(0, 7 * k, -12 * k); sg.add(rake);
     const back = new THREE.Mesh(new THREE.BoxGeometry(len, 15 * k, 1 * k), backMat); back.position.set(0, 7.5 * k, -23 * k); sg.add(back);
@@ -204,7 +209,6 @@ export function pitch() {
     for (const { p, home, phase } of players) {
       const pull = 0.25; // everyone drifts towards the ball, around their place
       p.position.set(home.x + (bx - home.x) * pull * 0.4 + Math.sin(t * 0.9 + phase) * 0.01, 0, home.z + (bz - home.z) * pull * 0.5 + Math.cos(t * 0.7 + phase) * 0.008);
-      p.position.y = Math.abs(Math.sin(t * 6 + phase)) * 0.06 * k;
     }
   } };
 }

@@ -59,7 +59,7 @@ export class WaveStage {
     const pmrem = new THREE.PMREMGenerator(r);
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     this.scene.environmentIntensity = 0.35;
-    this.camera = new THREE.PerspectiveCamera(FOV, 1, 1, 100000);
+    this.camera = new THREE.PerspectiveCamera(FOV, 1, 1, 100000); // near and far are set with the size
 
     // Light from the upper left, and a rim of the wave's own colour from behind.
     this.scene.add(new THREE.HemisphereLight(0x9fb4ff, 0x0a0a14, 0.7));
@@ -71,9 +71,17 @@ export class WaveStage {
 
     // The wave: a glowing line with a white core, drawn over everything.
     this.waveGeo = new LineGeometry();
-    this.glow = new Line2(this.waveGeo, new LineMaterial({ color: 0xffffff, linewidth: 3, transparent: true, depthTest: false }));
-    this.core = new Line2(this.waveGeo, new LineMaterial({ color: 0xffffff, linewidth: 1, transparent: true, opacity: 0.7, depthTest: false }));
-    this.halo = new Line2(this.waveGeo, new LineMaterial({ color: 0xffffff, linewidth: 12, transparent: true, opacity: 0.07, depthTest: false, blending: THREE.AdditiveBlending }));
+    // Each point carries a strength from 0 to 1 in its colour, so the ends can fade out. The halo adds its light,
+    // so it fades by colour; the glow and core are laid over (adding would brighten where the line's segments
+    // overlap, and bloom), so they fade by opacity.
+    const line = (linewidth, opacity, additive) => {
+      const m = new LineMaterial({ color: 0xffffff, linewidth, opacity, vertexColors: true, transparent: true, depthTest: false, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending });
+      if (!additive) m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <color_fragment>', 'alpha *= vColor.r;'); };
+      return m;
+    };
+    this.glow = new Line2(this.waveGeo, line(3, 1));
+    this.core = new Line2(this.waveGeo, line(1, 0.7));
+    this.halo = new Line2(this.waveGeo, line(12, 0.07, true));
     this.halo.renderOrder = 9; this.glow.renderOrder = this.core.renderOrder = 10;
     this.scene.add(this.halo, this.glow, this.core);
 
@@ -106,6 +114,9 @@ export class WaveStage {
     this.bloom.resolution.set(w / 2, h / 2);
     this.camera.aspect = w / h;
     this.camera.position.set(0, 0, h / 2 / Math.tan((FOV / 2) * Math.PI / 180));
+    // The near plane well out from the camera keeps the depth buffer fine enough that surfaces a fraction of a
+    // pixel apart (lines on grass, a pitch on its surround) do not flicker through each other.
+    this.camera.near = this.camera.position.z * 0.1;
     this.camera.far = this.camera.position.z * 4;
     this.camera.updateProjectionMatrix();
     for (const l of [this.halo, this.glow, this.core]) l.material.resolution.set(w, h);
@@ -133,8 +144,9 @@ export class WaveStage {
     this.current = m;
   }
 
-  // The wave as a list of screen points [x, y, x, y, …], in the colour rgb (0–255); null to hide.
-  wave(points, rgb) {
+  // The wave as a list of screen points [x, y, x, y, …], in the colour rgb (0–255), each with a brightness
+  // from 0 to 1 in fade; null to hide.
+  wave(points, rgb, fade) {
     const on = !!points;
     this.halo.visible = this.glow.visible = this.core.visible = on;
     if (!on) return;
@@ -148,6 +160,7 @@ export class WaveStage {
       this.waveLength = pos.length;
     }
     this.waveGeo.setPositions(pos);
+    this.waveGeo.setColors(fade.flatMap(f => [f, f, f]));
     const c = new THREE.Color().setRGB(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
     // Bright enough to bloom, with a paler core.
     this.halo.material.color.copy(c);

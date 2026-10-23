@@ -259,13 +259,15 @@ body.at-landing .readout, body.at-landing .details, body.at-landing .controls, b
 body.at-landing .caption { display: none; }
 .tip { position: fixed; z-index: 10; max-width: 340px; padding: 7px 10px; border-radius: 10px; background: var(--glass-strong); font-size: 12.5px; pointer-events: none; }
 .toast { position: fixed; z-index: 10; left: 50%; top: calc(var(--top-h) + 8px); translate: -50% 0; padding: 8px 16px; border-radius: 18px; }
-.help { color: var(--text); border-radius: 18px; padding: 22px 26px; max-width: 520px; background: var(--glass-strong); }
+.help { color: var(--text); border-radius: 18px; padding: 22px 26px; max-width: 520px; max-height: 88vh; overflow: auto; background: var(--glass-strong); }
 .help::backdrop { background: rgba(3, 5, 11, 0.6); }
 .help h2 { margin: 0 0 12px; font: 800 28px/1 var(--display); text-transform: uppercase; }
 .help dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0 0 14px; }
 .help dt { white-space: nowrap; }
 .help dd { margin: 0; color: #c4ccdb; }
 .help p { color: var(--dim); }
+.help .credits { font-size: 13px; line-height: 1.55; }
+.help .credits a { color: #c4ccdb; }
 [hidden] { display: none !important; }
 
 /* ---------------------------------------------------------------- narrower screens */
