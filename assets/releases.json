@@ -6,7 +6,8 @@
     {
       "version": "0.0.4",
       "stage": "Alpha",
-      "status": "next",
+      "status": "released",
+      "date": "2026-10-23",
       "title": "Steadier pictures",
       "items": [
         {"kind": "fix", "text": "The wave keeps the same height all the way across, as a steady wave does, and fades out at the edges of the picture instead of shrinking into a curl", "go": "#nm-4"},
