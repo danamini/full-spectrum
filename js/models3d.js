@@ -215,22 +215,17 @@ const MODELS = {
     } };
   },
 
-  // Water: oxygen and two hydrogens at their measured bond length (0.958 Å) and angle (104.5°), as balls and
-  // sticks inside a shimmering cloud of its ten electrons. The cloud is the molecule's real size and shape (one
-  // unit is 2.8 Å); it gathers towards the oxygen (pink) and thins round the hydrogens (blue): water is polar.
+  // Water as its ten electrons see it: a shimmering cloud, the molecule's real size and shape (one unit is
+  // 2.8 Å), round three nuclei shown as points of light, the oxygen's and two hydrogens' at their measured bond
+  // length (0.958 Å) and angle (104.5°). The cloud gathers towards the oxygen (pink) and thins round the
+  // hydrogens (blue): water is polar. The nuclei are drawn far larger than they are.
   water() {
     const g = new THREE.Group(), k = 1 / 2.8, half = (104.45 / 2) * Math.PI / 180, bond = 0.9584 * k;
-    const o = new THREE.Mesh(new THREE.SphereGeometry(0.42 * k, 48, 32), phys(0xe2483f, { roughness: 0.25, clearcoat: 1, sheen: 0.4 }));
-    const hs = [-1, 1].map(s => new THREE.Mesh(new THREE.SphereGeometry(0.26 * k, 48, 32), phys(0xeef1f6, { roughness: 0.3, clearcoat: 0.8 })));
-    const stick = phys(0xb8c0cc, { roughness: 0.35, metalness: 0.1 });
-    const sticks = hs.map(() => new THREE.Mesh(new THREE.CylinderGeometry(0.09 * k, 0.09 * k, 1, 16), stick));
-    const place = a => hs.forEach((h, i) => {
-      h.position.set(Math.sin(a) * bond * (i ? 1 : -1), -Math.cos(a) * bond, 0);
-      sticks[i].position.copy(h.position).multiplyScalar(0.5); sticks[i].scale.y = bond;
-      sticks[i].quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), h.position.clone().normalize());
-    });
+    const o = sparks([0, 0, 0], 0xffb08a, 0.08);
+    const hs = [-1, 1].map(() => sparks([0, 0, 0], 0xcfe6ff, 0.055));
+    const place = a => hs.forEach((h, i) => h.position.set(Math.sin(a) * bond * (i ? 1 : -1), -Math.cos(a) * bond, 0));
     place(half);
-    const atoms = new THREE.Group(); atoms.add(o, ...hs, ...sticks);
+    const atoms = new THREE.Group(); atoms.add(o, ...hs);
     // the electrons: 8 round the oxygen (pulled in, and bulging away from the hydrogens where its lone pairs
     // are), one shared towards each hydrogen
     const b = buffer(), c = new THREE.Color(), gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v); };
@@ -246,7 +241,7 @@ const MODELS = {
       push(b, a, d, c, 0.8 + Math.random() * 0.6);
     }
     const cloud = pointsFrom(b, cloudMaterial({ size: 0.034, rate: 0.12 }));
-    cloud.material.uniforms.uOpacity.value = 0.42;
+    cloud.material.uniforms.uOpacity.value = 0.6;
     g.add(atoms, cloud);
     g.position.y = 0.06;
     const holder = new THREE.Group(); holder.add(g);

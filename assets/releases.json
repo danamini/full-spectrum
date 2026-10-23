@@ -13,6 +13,7 @@
         {"kind": "fix", "text": "The football stadium no longer flickers: its crowd, pitch and players hold still as it turns, and every model is drawn with finer depth", "go": "#m-98"},
         {"kind": "new", "text": "Something to see all the way down: an oxygen atom's and a lead atom's innermost electrons fill the empty stretch between the hydrogen atom and the nucleus", "go": "#kev-95"},
         {"kind": "fix", "text": "The hydrogen atom's electron cloud is drawn at its true size, spilling past its 106 pm as a real one does, rather than at half size", "go": "#kev-12.4"},
+        {"kind": "better", "text": "The water molecule is its cloud of electrons round three glowing nuclei, without the ball-and-stick model inside it", "go": "#nm-0.26"},
         {"kind": "new", "text": "Credits for all the data, pictures, maps, molecules, models, fonts and code, in Getting around (?)", "go": "#credits"}
       ]
     },
