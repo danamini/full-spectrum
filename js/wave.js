@@ -5,7 +5,7 @@
 import { frequency, photonEnergyEV, photons } from './physics.js';
 import { bandAt } from './bands.js';
 import { spectral, VISIBLE } from './colour.js';
-import { pick } from './scale.js';
+import { pick, FITS, OBJECTS } from './scale.js';
 import * as fmt from './format.js';
 import { waveHeight } from './notes.js';
 
@@ -68,7 +68,7 @@ export class WaveView {
     const obj = pick(physW);
     const spx = (obj.m / physW) * W;
     const ocx = rect.x + rect.w / 2;
-    const shown = spx >= 3 && spx <= W * 1.6;
+    const shown = spx >= 3 && spx <= W * FITS;
     this.stage?.model(shown ? obj.key : null, ocx, cy, spx);
     this.shown = shown && this.stage ? obj.key : null; // for the credit under the picture
     ctx.save();
@@ -95,6 +95,8 @@ export class WaveView {
         ctx.fillText(`${obj.name} (${fmt.length(obj.m)}) is in the ring, ${n} times smaller than this picture`, ocx, cy + A + 40);
       } else {
         ctx.fillText(`${obj.name} (${fmt.length(obj.m)}) is ${n} times wider than this whole picture`, ocx, cy + A + 40);
+        // Nothing smaller has a size to compare with.
+        if (obj === OBJECTS.at(-1)) ctx.fillText('Nothing smaller has a measured size: quarks and electrons, as far as anyone can tell, have none at all.', ocx, cy + A + 58);
       }
     }
     ctx.restore();

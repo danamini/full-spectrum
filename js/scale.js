@@ -1,7 +1,10 @@
 // Things of known size, from the Earth–Moon distance down to a proton. The wave view picks the one that best
 // fits beside the current wavelength so the scale can be felt, and shows its 3D model (models3d.js, by key).
 // Sizes: NASA planetary fact sheets; buildings and objects from their owners' published figures; cells and
-// molecules typical values; the proton's charge radius (CODATA 2018, 0.84 fm) doubled.
+// molecules typical values; the proton's charge radius (CODATA 2018, 0.84 fm) doubled. An atom's innermost (1s)
+// electrons, like the hydrogen atom, are measured across twice their most likely distance from the nucleus: the
+// Bohr radius over the charge they feel (Slater's rules: Z − 0.3), times √(1 − (Zα)²) for lead, whose 1s
+// electrons move fast enough for relativity to pull them in by a fifth.
 // `maps`: the real maps or heights it is drawn with (data/textures.js), credited under it.
 // `pdb`: the Protein Data Bank structures its bead model is built from (data/molecules.js), credited under it.
 // `along`: a distance between two points; `tall`: measured up the screen (for a hair and DNA, their thickness).
@@ -35,15 +38,19 @@ export const OBJECTS = [
   { key: 'dna', name: 'The width of DNA', m: 2e-9, tall: true, pdb: ['dna'] },
   { key: 'water', name: 'A water molecule', m: 2.8e-10 },
   { key: 'hydrogen', name: 'A hydrogen atom', m: 1.06e-10 },
+  { key: 'oxygenCore', name: "An oxygen atom's innermost electrons", m: 1.4e-11 },
+  { key: 'leadCore', name: "A lead atom's innermost electrons", m: 1.0e-12 },
   { key: 'uranium', name: 'A uranium nucleus', m: 1.5e-14 },
   { key: 'proton', name: 'A proton', m: 1.68e-15 },
 ];
 
-// The object that sits best beside a picture `width` metres across: about a third of the width if possible.
+// The object that sits best beside a picture `width` metres across: about a third of the width if possible, and
+// never one too big to fit (the wave view draws things up to 1.6 times the picture), unless nothing fits.
+export const FITS = 1.6;
 export function pick(width) {
   let best = null, bestD = Infinity;
   for (const o of OBJECTS) {
-    const d = Math.abs(Math.log(o.m / (width * 0.33)));
+    const d = Math.abs(Math.log(o.m / (width * 0.33))) + (o.m > width * FITS ? 100 : 0);
     if (d < bestD) { best = o; bestD = d; }
   }
   return best;

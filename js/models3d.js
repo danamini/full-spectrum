@@ -258,23 +258,32 @@ const MODELS = {
     } };
   },
 
-  // Hydrogen's electron in its lowest state, as Molecule Viewer draws a cloud: each point blinks between two
-  // places it might be found, so the cloud shimmers. Densest at the centre, with no edge; two Bohr radii, the
-  // size usually quoted, is one unit. The nucleus is drawn far too large to see: at true scale it would be
-  // 60,000 times smaller than the cloud.
+  // Hydrogen's electron in its lowest state, as Molecule Viewer draws a cloud (shell(), below). The nucleus is
+  // drawn far too large to see: at true scale it would be 60,000 times smaller than the cloud.
   hydrogen() {
-    const a0 = 0.25, b = buffer(), c = new THREE.Color();
-    const sample = v => randomDir(v).multiplyScalar(-a0 / 2 * Math.log(Math.random() * Math.random() * Math.random())); // 1s: gamma(3) in 2r/a0
-    for (let i = 0; i < 12000; i++) {
-      const p = sample(new THREE.Vector3()), q = sample(new THREE.Vector3());
-      c.set('#7cc4ff').lerp(new THREE.Color('#d6ecff'), Math.max(0, 1 - p.length() / 0.25) * 0.6);
-      push(b, p, q, c, 0.8 + Math.random() * 0.5);
-    }
-    const cloud = pointsFrom(b, cloudMaterial({ size: 0.03, rate: 0.12 }));
-    cloud.material.uniforms.uOpacity.value = 0.75;
-    const core = sparks([0, 0, 0], 0xffd9a0, 0.03);
-    const g = new THREE.Group(); g.add(cloud, core);
-    return { obj: g, update: (t, px, perUnit) => { if (perUnit) PROJ.value = perUnit; tick(g, t); g.rotation.y = t * 0.08; } };
+    const g = shell({ colour: '#7cc4ff', inner: '#d6ecff', points: 16000 });
+    g.obj.add(sparks([0, 0, 0], 0xffd9a0, 0.03));
+    return g;
+  },
+
+  // An oxygen atom's two innermost electrons, pulled in eight times closer than hydrogen's by its 8 protons. Its
+  // other six electrons are out beyond the picture, as far as a water molecule is wide. The nucleus, too small
+  // to see, is drawn larger.
+  oxygenCore() {
+    const g = shell({ colour: '#ff8fb8', inner: '#ffe0ec', points: 14000 });
+    g.obj.add(sparks([0, 0, 0], 0xffd9a0, 0.03));
+    return g;
+  },
+
+  // A lead atom's two innermost electrons, close round its 82 protons; relativity pulls them in further, and
+  // shapes the cloud a little more sharply. These are the electrons that make lead stop X-rays and gamma rays.
+  // The nucleus (lead-208) is at its true size, a seventieth of the cloud.
+  leadCore() {
+    const g = shell({ colour: '#b9a4ff', inner: '#efe8ff', points: 14000, gamma: Math.sqrt(1 - (82 / 137.036) ** 2) });
+    const n = nucleus(82, 208), d = 2 * 1.2e-15 * 208 ** (1 / 3) / 1.0e-12; // its diameter, in units of the cloud
+    n.group.scale.setScalar(d / 2 / n.radius); g.obj.add(n.group);
+    const update = g.update;
+    return { obj: g.obj, update: (t, px, perUnit) => { update(t, px, perUnit); n.update(t); } };
   },
 
   // Uranium-238 as Molecule Viewer packs a nucleus: 92 protons and 146 neutrons, jostling.
@@ -293,6 +302,38 @@ const MODELS = {
     return { obj: g, update: (t, px, perUnit) => { if (perUnit) PROJ.value = perUnit * inner * Math.min(2, Math.max(1, 800 / px)); p.update(t); g.rotation.y = t * 0.15; } };
   },
 };
+
+// A 1s cloud of electrons, as Molecule Viewer draws one: each point blinks between two places an electron might
+// be found, so the cloud shimmers. Densest at the centre, with no edge; one unit across is twice the electron's
+// most likely distance from the nucleus, so the cloud spills past its measure as the real one does. Its radial
+// density goes as r^(2γ) e^(−2r/a), with γ = 1 without relativity (a gamma distribution, shape 2γ + 1).
+function shell({ colour, inner, points, gamma = 1 }) {
+  const a = 0.5 / gamma, k = 2 * gamma + 1, b = buffer(), c = new THREE.Color(), pale = new THREE.Color(inner);
+  const radius = () => gammaSample(k) * a / 2;
+  const sample = v => randomDir(v).multiplyScalar(radius());
+  for (let i = 0; i < points; i++) {
+    const p = sample(new THREE.Vector3()), q = sample(new THREE.Vector3());
+    // paler and larger near the middle, fading out where the electrons are rarely found
+    const r = p.length() / 0.5, near = Math.max(0, 1 - r);
+    c.set(colour).lerp(pale, near * 0.7).multiplyScalar(Math.min(1, 2.4 / (1 + r * r)));
+    push(b, p, q, c, (0.6 + near * 0.8) * (0.8 + Math.random() * 0.4));
+  }
+  const cloud = pointsFrom(b, cloudMaterial({ size: 0.03, rate: 0.12 }));
+  cloud.material.uniforms.uOpacity.value = 0.75;
+  const g = new THREE.Group(); g.add(cloud);
+  return { obj: g, update: (t, px, perUnit) => { if (perUnit) PROJ.value = perUnit; tick(g, t); g.rotation.y = t * 0.08; } };
+}
+
+// A gamma-distributed number with shape k ≥ 1 and scale 1 (Marsaglia and Tsang).
+function gammaSample(k) {
+  const d = k - 1 / 3, c = 1 / Math.sqrt(9 * d);
+  for (;;) {
+    let x, v;
+    do { const u1 = Math.random() || 1e-12, u2 = Math.random(); x = Math.sqrt(-2 * Math.log(u1)) * Math.cos(TAU * u2); v = 1 + c * x; } while (v <= 0);
+    v = v * v * v; const u = Math.random();
+    if (Math.log(u) < 0.5 * x * x + d - d * v + d * Math.log(v)) return d * v;
+  }
+}
 
 // A route between two places: a pin at each end, the way between, and a dot that travels it.
 function route(points, colour) {
