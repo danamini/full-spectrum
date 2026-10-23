@@ -11,9 +11,9 @@
       "items": [
         {"kind": "fix", "text": "The wave keeps the same height all the way across, as a steady wave does, and fades out at the edges of the picture instead of shrinking into a curl", "go": "#nm-4"},
         {"kind": "fix", "text": "The football stadium no longer flickers: its crowd, pitch and players hold still as it turns, and every model is drawn with finer depth", "go": "#m-98"},
-        {"kind": "new", "text": "Something to see all the way down: between a hydrogen atom and a uranium nucleus, where the picture was empty, an oxygen atom's innermost electrons (14 pm) and a lead atom's (1 pm), the ones that make lead stop X-rays and gamma rays; and the wave view never picks a thing too big to show", "go": "#kev-95"},
+        {"kind": "new", "text": "Something to see all the way down: an oxygen atom's and a lead atom's innermost electrons fill the empty stretch between the hydrogen atom and the nucleus", "go": "#kev-95"},
         {"kind": "fix", "text": "The hydrogen atom's electron cloud is drawn at its true size, spilling past its 106 pm as a real one does, rather than at half size", "go": "#kev-12.4"},
-        {"kind": "new", "text": "Credits for all the data, pictures, maps, molecules, models, fonts and code, in Getting around (?)"}
+        {"kind": "new", "text": "Credits for all the data, pictures, maps, molecules, models, fonts and code, in Getting around (?)", "go": "#credits"}
       ]
     },
     {

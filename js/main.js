@@ -368,6 +368,7 @@ function metresFromAddress(key) {
 }
 
 async function go(key, { from = 'user' } = {}) {
+  if (key === 'credits') { showCredits(); key = 'visible'; } // opened at that address: the credits, over the start
   if (from === 'user') stopAll();
   hideLanding();
   key = key || 'visible';
@@ -429,8 +430,15 @@ async function go(key, { from = 'user' } = {}) {
   return go('visible', { from });
 }
 
-addEventListener('hashchange', () => {
+// The credits, in Getting around: an address of their own (#credits) that opens them over wherever you are.
+function showCredits() {
+  if (!$('#help').open) $('#help').showModal();
+  $('#credits').scrollIntoView({ block: 'start' });
+}
+
+addEventListener('hashchange', e => {
   const k = location.hash.slice(1);
+  if (k === 'credits') { history.replaceState(null, '', new URL(e.oldURL).hash || location.pathname); return showCredits(); }
   if (!k) return showLanding();
   if (k !== addressFor(ribbon.metres)) go(k);
 });

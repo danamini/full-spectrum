@@ -220,9 +220,13 @@ await test("what's new: the version, the panel and every Show me", async page =>
   for (const go of gos) {
     if (!(await page.locator('#whatsnew').evaluate(d => d.open))) { await badge.click(); await wait(page, 200); }
     await page.click(`#whatsnew .wn-go[href="${go}"]`); await wait(page, 120);
-    // The journey sets off from its first stop, so it is checked by running rather than by its address.
-    const ok = go === '#journey' ? await page.evaluate(() => !!spectrum.state.journey) : await page.evaluate(() => location.hash) === go;
+    // The journey sets off from its first stop, so it is checked by running rather than by its address; the
+    // credits open over the page, which keeps its address.
+    const ok = go === '#journey' ? await page.evaluate(() => !!spectrum.state.journey)
+      : go === '#credits' ? await page.evaluate(() => document.querySelector('#help').open && location.hash !== '#credits')
+      : await page.evaluate(() => location.hash) === go;
     expect(ok, `Show me ${go} landed on ${await page.evaluate(() => location.hash)}`);
+    await page.evaluate(() => document.querySelector('#help').open && document.querySelector('#help').close());
     expect(!(await page.locator('#whatsnew').evaluate(d => d.open)), `panel still open after ${go}`);
     await page.evaluate(() => spectrum.state.journey && document.querySelector('#captionStop').click());
   }
